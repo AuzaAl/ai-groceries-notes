@@ -34,7 +34,7 @@
               "type": "graph",
               "state": {},
               "icon": "lucide-git-fork",
-              "title": "Tampilan grafik"
+              "title": "Graph view"
             }
           }
         ]
@@ -60,7 +60,7 @@
                 "autoReveal": false
               },
               "icon": "lucide-folder-closed",
-              "title": "Penjelajah berkas"
+              "title": "Files"
             }
           },
           {
@@ -187,13 +187,13 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "switcher:Buka peralih cepat": false,
-      "graph:Buka tampilan grafik": false,
-      "canvas:Buat kanvas baru": false,
-      "daily-notes:Buka catatan hari ini": false,
-      "templates:Masukkan template": false,
-      "command-palette:Buka palet perintah": false,
-      "bases:Buat basis baru": false
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
     }
   },
   "active": "27cdf797c1f76139",

@@ -1,44 +1,57 @@
-# CLAUDE.md
+# CLAUDE.md — GroceryNotes
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+AI-Powered Grocery & Recipe Manager (Flutter + Firebase + Gemini).
 
 ## Quick commands (Flutter)
 
-- Install deps:
-  - `flutter pub get`
-- Run the app (pick a device first):
-  - `flutter run`
-- Format:
-  - `dart format .`
-- Static analysis / lint:
-  - `flutter analyze`
-- Run tests:
-  - `flutter test`
-- Run a single test file:
-  - `flutter test test/<file>_test.dart`
-- Build release artifacts:
-  - Android APK: `flutter build apk --release`
-  - Android App Bundle: `flutter build appbundle --release`
-  - iOS (on macOS): `flutter build ios --release`
+- Install deps: `flutter pub get`
+- Run the app: `flutter run`
+- Format: `dart format .`
+- Static analysis: `flutter analyze`
+- Run tests: `flutter test`
+- Build APK: `flutter build apk --release`
 
-## High-level architecture
+## Project Architecture & Tech Stack
 
-This is a minimal Flutter app scaffolded from the standard template.
+- **Framework**: Flutter 3.x (Dart)
+- **State Management**: Riverpod 2.x
+- **Routing**: GoRouter
+- **Persistence**: Hive (Local) + Firebase Firestore (Remote)
+- **Networking**: Dio
+- **AI**: Google Gemini 1.5 Flash (via Firebase Cloud Functions)
+- **APIs**: YouTube Data API v3, TheMealDB API
 
-- Entry point: `lib/main.dart`
-  - `main()` calls `runApp(const MainApp())`.
-  - `MainApp` currently renders a `MaterialApp` with a single `Scaffold` and a `Hello World!` `Text` widget.
+### Folder Structure (Proposed)
 
-## Notable dependencies (currently unused in code)
+```
+lib/
+├── core/             # Themes, constants, routing, common widgets
+├── features/         # Feature-based modules
+│   ├── auth/         # Google Sign-In logic
+│   ├── today/        # Today's Notes & Checklist
+│   ├── ai_link/      # AI Extraction from URL
+│   ├── my_notes/     # Archive & History
+│   ├── discover/     # Recipe Recommendations
+│   └── profile/      # User Profile & Settings
+├── services/         # Firebase, AI, Dio, Hive services
+├── models/           # Data models (GroceryItem, Recipe, etc.)
+└── main.dart         # Entry point & Initializations
+```
 
-`pubspec.yaml` includes common app building blocks that are not yet wired into `lib/`:
+## Implementation Guidelines
 
-- `flutter_riverpod`: state management / DI
-- `go_router`: declarative routing
-- `dio`: HTTP client
-- `hive`: local storage
-- `cached_network_image`: image caching
-- `flutter_animate`: animations
-- `flutter_inappwebview`: in-app webview
+- **Naming**: Use `CamelCase` for classes, `snake_case` for files/folders, and `camelCase` for variables/methods.
+- **State**: Prefer `AsyncNotifier` or `Notifier` from Riverpod for feature states.
+- **Offline-First**: All "Today's Notes" must be saved to Hive immediately and synced to Firestore when online.
+- **Error Handling**: Follow PRD error dialog specs (US-03) for AI link failures.
+- **UI**: Respect system font scaling and dark mode. Use `flutter_animate` for transitions.
 
-Before implementing new features, check whether these are intended for the upcoming architecture (Riverpod + GoRouter, persistence with Hive, networking with Dio), and match existing patterns once they appear.
+## Current Roadmap (Phase 1)
+
+1. [ ] Setup Project (Firebase + Riverpod + Hive)
+2. [ ] Auth Google & Onboarding UI
+3. [ ] Today's Notes UI & Archive Logic
+4. [ ] AI Link Feature (Cloud Functions + Gemini)
+
+---
+*Reference: docs/PRD_GroceryNotes_App.md*

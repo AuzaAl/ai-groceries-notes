@@ -1,0 +1,2689 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  GROCERYNOTES APP - COMPLETE SITEMAP XML
+  ============================================================================
+  Platform: Flutter (Android)
+  Version: 1.0.0
+  Author: Auza Alfarizi Ramadhan
+  
+  PURPOSE: Developer reference for complete app structure, navigation,
+           screens, components, and user flows without UI mockups.
+  
+  READING GUIDE:
+  - Each <screen> represents a Flutter route/page
+  - <component> = Widget/UI element to implement
+  - <transition> = Navigation action (push, pop, replace)
+  - <acceptance_criteria> = What must work for feature to be complete
+  - <data_flow> = How data moves between screens/services
+  ============================================================================
+-->
+
+<app>
+  <metadata>
+    <name>GroceryNotes</name>
+    <tagline>AI-Powered Grocery &amp; Recipe Manager</tagline>
+    <version>1.0.0</version>
+    <platform>Flutter Android</platform>
+    <min_android_sdk>21</min_android_sdk>
+    <target_android_sdk>34</target_android_sdk>
+  </metadata>
+
+  <!-- ========================================================================
+       TECH STACK REFERENCE
+       ======================================================================== -->
+  <tech_stack>
+    <state_management>Riverpod 2.x</state_management>
+    <local_storage>Hive 2.x (offline-first)</local_storage>
+    <backend>Firebase (Auth, Firestore, Cloud Functions)</backend>
+    <ai_service>Google Gemini API (via Cloud Functions)</ai_service>
+    <http_client>Dio 5.x</http_client>
+    <dependency_injection>Riverpod</dependency_injection>
+    <routing>go_router 13.x</routing>
+  </tech_stack>
+
+  <!-- ========================================================================
+       DATA MODELS (Core Entities)
+       ======================================================================== -->
+  <data_models>
+    <model name="GroceryItem">
+      <description>Single grocery item/ingredient</description>
+      <fields>
+        <field name="id" type="String" required="true">Unique identifier (UUID)</field>
+        <field name="name" type="String" required="true">Ingredient name (e.g., "Bawang Putih")</field>
+        <field name="quantity" type="double" required="false">Amount (e.g., 2.5)</field>
+        <field name="unit" type="String" required="false">Unit of measurement (e.g., "kg", "siung")</field>
+        <field name="category" type="String" required="false">Category (e.g., "Bumbu &amp; Rempah")</field>
+        <field name="notes" type="String?" required="false">Optional notes (e.g., "merk A")</field>
+        <field name="isChecked" type="bool" required="true">Purchase status (default: false)</field>
+        <field name="addedAt" type="DateTime" required="true">Timestamp when added</field>
+        <field name="source" type="String" required="true">Origin: "ai" | "manual" | "recipe"</field>
+      </fields>
+    </model>
+
+    <model name="TodayNote">
+      <description>Today's grocery note (active shopping list)</description>
+      <fields>
+        <field name="date" type="String" required="true">ISO date string (e.g., "2026-05-20")</field>
+        <field name="items" type="List&lt;GroceryItem&gt;" required="true">List of grocery items</field>
+        <field name="status" type="String" required="true">"active" | "archived"</field>
+        <field name="recipeTitle" type="String?" required="false">Recipe name if from AI link</field>
+        <field name="recipeUrl" type="String?" required="false">Original recipe URL</field>
+        <field name="createdAt" type="DateTime" required="true">Creation timestamp</field>
+        <field name="updatedAt" type="DateTime" required="true">Last update timestamp</field>
+      </fields>
+    </model>
+
+    <model name="ArchivedNote">
+      <description>Past grocery note (read-only history)</description>
+      <fields>
+        <field name="id" type="String" required="true">Unique note ID</field>
+        <field name="date" type="String" required="true">ISO date string</field>
+        <field name="items" type="List&lt;GroceryItem&gt;" required="true">Items list</field>
+        <field name="status" type="String" required="true">"archived"</field>
+        <field name="source" type="String" required="true">"ai" | "manual" | "mixed"</field>
+        <field name="recipeTitle" type="String?" required="false">Recipe name if exists</field>
+        <field name="recipeUrl" type="String?" required="false">Recipe source URL</field>
+        <field name="completionRate" type="double" required="true">% of items checked (0.0-1.0)</field>
+        <field name="archivedAt" type="DateTime" required="true">Archive timestamp</field>
+      </fields>
+    </model>
+
+    <model name="Recipe">
+      <description>Recipe from Discover feature</description>
+      <fields>
+        <field name="id" type="String" required="true">Recipe ID from API</field>
+        <field name="title" type="String" required="true">Recipe name</field>
+        <field name="thumbnail" type="String" required="true">Image URL</field>
+        <field name="category" type="String" required="true">Category (e.g., "Masakan Indonesia")</field>
+        <field name="cookingTime" type="int" required="false">Minutes to cook</field>
+        <field name="difficulty" type="String" required="false">"easy" | "medium" | "hard"</field>
+        <field name="servings" type="int" required="false">Number of servings</field>
+        <field name="ingredients" type="List&lt;String&gt;" required="true">List of ingredients with quantities</field>
+        <field name="steps" type="List&lt;String&gt;" required="true">Cooking instructions</field>
+        <field name="sourceUrl" type="String" required="true">Original recipe URL</field>
+        <field name="sourceType" type="String" required="true">"youtube" | "blog" | "api"</field>
+      </fields>
+    </model>
+
+    <model name="IngredientHistory">
+      <description>User's ingredient usage history for autocomplete</description>
+      <fields>
+        <field name="id" type="String" required="true">Ingredient ID</field>
+        <field name="name" type="String" required="true">Ingredient name</field>
+        <field name="category" type="String" required="true">Category</field>
+        <field name="useCount" type="int" required="true">Times used by user</field>
+        <field name="lastUsed" type="DateTime" required="true">Last usage timestamp</field>
+      </fields>
+    </model>
+
+    <model name="User">
+      <description>User account data</description>
+      <fields>
+        <field name="uid" type="String" required="true">Firebase Auth UID</field>
+        <field name="email" type="String" required="true">User email</field>
+        <field name="displayName" type="String" required="true">Full name</field>
+        <field name="photoUrl" type="String?" required="false">Profile picture URL</field>
+        <field name="createdAt" type="DateTime" required="true">Account creation date</field>
+        <field name="themeMode" type="String" required="true">"light" | "dark" | "system"</field>
+      </fields>
+    </model>
+  </data_models>
+
+  <!-- ========================================================================
+       FIRESTORE DATABASE SCHEMA
+       ======================================================================== -->
+  <firestore_schema>
+    <collection name="users">
+      <document_id>userId (Firebase Auth UID)</document_id>
+      <fields>
+        <field>email: String</field>
+        <field>displayName: String</field>
+        <field>photoUrl: String?</field>
+        <field>createdAt: Timestamp</field>
+        <field>themeMode: String</field>
+      </fields>
+      <security_rules>allow read, write: if request.auth.uid == userId</security_rules>
+
+      <subcollection name="today_note">
+        <document_id>active</document_id>
+        <description>Current day's grocery note (single doc)</description>
+        <fields>
+          <field>date: String (ISO)</field>
+          <field>items: Array&lt;Map&gt;</field>
+          <field>status: "active"</field>
+          <field>recipeTitle: String?</field>
+          <field>recipeUrl: String?</field>
+          <field>createdAt: Timestamp</field>
+          <field>updatedAt: Timestamp</field>
+        </fields>
+      </subcollection>
+
+      <subcollection name="notes">
+        <document_id>noteId (auto-generated)</document_id>
+        <description>Archived grocery notes</description>
+        <fields>
+          <field>date: String (ISO)</field>
+          <field>items: Array&lt;Map&gt;</field>
+          <field>status: "archived"</field>
+          <field>source: "ai" | "manual" | "mixed"</field>
+          <field>recipeTitle: String?</field>
+          <field>recipeUrl: String?</field>
+          <field>completionRate: Number</field>
+          <field>archivedAt: Timestamp</field>
+        </fields>
+      </subcollection>
+
+      <subcollection name="ingredient_history">
+        <document_id>ingredientId (auto-generated)</document_id>
+        <description>User's ingredient usage history</description>
+        <fields>
+          <field>name: String</field>
+          <field>category: String</field>
+          <field>useCount: Number</field>
+          <field>lastUsed: Timestamp</field>
+        </fields>
+      </subcollection>
+    </collection>
+
+    <collection name="recipes">
+      <document_id>recipeId (auto-generated)</document_id>
+      <description>Curated Indonesian recipes (fallback dataset)</description>
+      <fields>
+        <field>title: String</field>
+        <field>thumbnail: String</field>
+        <field>category: String</field>
+        <field>cookingTime: Number</field>
+        <field>ingredients: Array&lt;String&gt;</field>
+        <field>steps: Array&lt;String&gt;</field>
+        <field>sourceUrl: String</field>
+        <field>isActive: Boolean</field>
+      </fields>
+      <security_rules>allow read: if request.auth != null; allow write: if false</security_rules>
+    </collection>
+  </firestore_schema>
+
+  <!-- ========================================================================
+       HIVE LOCAL STORAGE SCHEMA (OFFLINE)
+       ======================================================================== -->
+  <hive_schema>
+    <box name="today_note_box" type="TodayNote">
+      <description>Today's grocery note cached locally</description>
+      <key>today_note</key>
+      <sync_strategy>Real-time to Firestore when online</sync_strategy>
+    </box>
+
+    <box name="cached_recipes_box" type="List&lt;Recipe&gt;">
+      <description>Last 50 viewed recipes for offline access</description>
+      <key>cached_recipes</key>
+      <sync_strategy>Refresh from API when online</sync_strategy>
+    </box>
+
+    <box name="ingredient_cache_box" type="List&lt;IngredientHistory&gt;">
+      <description>Full ingredient history cached for fast search</description>
+      <key>ingredient_history</key>
+      <sync_strategy>Bi-directional sync with Firestore</sync_strategy>
+      <search_performance>≤300ms for local queries</search_performance>
+    </box>
+
+    <box name="archived_notes_box" type="List&lt;ArchivedNote&gt;">
+      <description>Last 30 archived notes cached</description>
+      <key>archived_notes</key>
+      <sync_strategy>Fetch from Firestore on-demand</sync_strategy>
+    </box>
+
+    <box name="app_settings_box" type="Map&lt;String, dynamic&gt;">
+      <description>App settings and preferences</description>
+      <keys>
+        <key>theme_mode: String</key>
+        <key>last_sync: DateTime</key>
+        <key>last_archive_check: DateTime</key>
+      </keys>
+    </box>
+  </hive_schema>
+
+  <!-- ========================================================================
+       APP NAVIGATION STRUCTURE
+       ======================================================================== -->
+  <navigation>
+    <route_structure>
+      <route path="/" name="SplashScreen" />
+      <route path="/onboarding" name="OnboardingScreen" />
+      <route path="/login" name="LoginScreen" />
+      <route path="/main" name="MainShell">
+        <route path="/main/today" name="TodayScreen" initial="true" />
+        <route path="/main/mynotes" name="MyNotesScreen" />
+        <route path="/main/discover" name="DiscoverScreen" />
+        <route path="/main/profile" name="ProfileScreen" />
+      </route>
+      <route path="/add-link" name="AddLinkScreen" />
+      <route path="/add-manual" name="AddManualScreen" />
+      <route path="/add-text" name="AddTextManualScreen" />
+      <route path="/review-ai" name="ReviewAIResultScreen" />
+      <route path="/select-archive" name="SelectArchiveScreen" />
+      <route path="/archive-detail/:id" name="ArchiveDetailScreen" />
+      <route path="/recipe-detail/:id" name="RecipeDetailScreen" />
+      <route path="/ingredient-history" name="IngredientHistoryScreen" />
+      <route path="/web-view" name="InAppBrowserScreen" />
+    </route_structure>
+
+    <bottom_nav_bar>
+      <description>Persistent bottom navigation (MainShell)</description>
+      <items>
+        <item index="0" label="Today" icon="home" route="/main/today" />
+        <item index="1" label="My Notes" icon="assignment" route="/main/mynotes" />
+        <item index="2" label="Discover" icon="explore" route="/main/discover" />
+        <item index="3" label="Profile" icon="person" route="/main/profile" />
+      </items>
+      <behavior>
+        <preserve_state>true</preserve_state>
+        <animation>fade_transition</animation>
+      </behavior>
+    </bottom_nav_bar>
+  </navigation>
+
+  <!-- ========================================================================
+       SCREEN DEFINITIONS (COMPLETE APP FLOW)
+       ======================================================================== -->
+  <screens>
+
+    <!-- ====================================================================
+         AUTHENTICATION FLOW
+         ==================================================================== -->
+    <screen id="splash" route="/">
+      <name>Splash Screen</name>
+      <description>App startup screen with logo and loading indicator</description>
+      
+      <components>
+        <component type="Image">
+          <property>asset: assets/images/logo.png</property>
+          <property>size: 120x120</property>
+        </component>
+        <component type="Text">
+          <property>text: "GroceryNotes"</property>
+          <property>style: headline1</property>
+        </component>
+        <component type="CircularProgressIndicator">
+          <property>color: primary</property>
+        </component>
+      </components>
+
+      <business_logic>
+        <check>1. Check if user is authenticated (Firebase Auth)</check>
+        <check>2. If first-time user → navigate to onboarding</check>
+        <check>3. If not authenticated → navigate to login</check>
+        <check>4. If authenticated → check archive status → navigate to main</check>
+      </business_logic>
+
+      <transitions>
+        <transition to="/onboarding" condition="first_time_user" delay="1s" />
+        <transition to="/login" condition="!authenticated" delay="1s" />
+        <transition to="/main/today" condition="authenticated" delay="1s" />
+      </transitions>
+    </screen>
+
+    <screen id="onboarding" route="/onboarding">
+      <name>Onboarding Screens</name>
+      <description>3-slide introduction for new users</description>
+      
+      <components>
+        <component type="PageView">
+          <property>pageCount: 3</property>
+          <property>scrollDirection: horizontal</property>
+          <property>controller: PageController</property>
+        </component>
+
+        <page index="0">
+          <component type="Image">asset: assets/images/onboarding_1.png</component>
+          <component type="Text">
+            <property>text: "Selamat Datang di GroceryNotes"</property>
+            <property>style: headline5</property>
+          </component>
+          <component type="Text">
+            <property>text: "Transform resep YouTube/blog jadi daftar belanja otomatis dengan AI"</property>
+            <property>style: bodyText1</property>
+          </component>
+        </page>
+
+        <page index="1">
+          <component type="Image">asset: assets/images/onboarding_2.png</component>
+          <component type="Text">
+            <property>text: "Belanja Lebih Mudah"</property>
+            <property>style: headline5</property>
+          </component>
+          <component type="Text">
+            <property>text: "Checklist interaktif, pencarian bahan cepat, dan mode offline"</property>
+            <property>style: bodyText1</property>
+          </component>
+        </page>
+
+        <page index="2">
+          <component type="Image">asset: assets/images/onboarding_3.png</component>
+          <component type="Text">
+            <property>text: "Temukan Inspirasi Masak"</property>
+            <property>style: headline5</property>
+          </component>
+          <component type="Text">
+            <property>text: "Ratusan rekomendasi resep dari berbagai kategori"</property>
+            <property>style: bodyText1</property>
+          </component>
+        </page>
+
+        <component type="DotsIndicator">
+          <property>currentPage: pageIndex</property>
+          <property>count: 3</property>
+        </component>
+
+        <component type="Row">
+          <component type="TextButton">
+            <property>label: "Lewati"</property>
+            <property>onPressed: () => Navigator.pushReplacementNamed('/login')</property>
+          </component>
+          <component type="ElevatedButton">
+            <property>label: pageIndex == 2 ? "Mulai" : "Lanjut"</property>
+            <property>onPressed: () => pageIndex == 2 ? Navigator.pushReplacementNamed('/login') : nextPage()</property>
+          </component>
+        </component>
+      </components>
+
+      <state_management>
+        <state>int currentPageIndex = 0</state>
+      </state_management>
+
+      <transitions>
+        <transition to="/login" trigger="skip_button" type="pushReplacement" />
+        <transition to="/login" trigger="final_page_next" type="pushReplacement" />
+      </transitions>
+    </screen>
+
+    <screen id="login" route="/login">
+      <name>Login Screen</name>
+      <description>Authentication with Google Sign-In</description>
+      
+      <components>
+        <component type="Column">
+          <component type="Image">
+            <property>asset: assets/images/logo_large.png</property>
+            <property>size: 160x160</property>
+          </component>
+
+          <component type="Text">
+            <property>text: "GroceryNotes"</property>
+            <property>style: headline3</property>
+          </component>
+
+          <component type="Text">
+            <property>text: "AI-powered grocery assistant"</property>
+            <property>style: subtitle1</property>
+          </component>
+
+          <component type="SizedBox">height: 48</component>
+
+          <component type="ElevatedButton">
+            <property>label: "Login with Google"</property>
+            <property>icon: assets/icons/google_logo.svg</property>
+            <property>onPressed: () => _signInWithGoogle()</property>
+            <property>style: white background, colored border</property>
+          </component>
+
+          <component type="SizedBox">height: 16</component>
+
+          <component type="Text">
+            <property>text: "Dengan login, kamu menyetujui syarat dan ketentuan"</property>
+            <property>style: caption, gray</property>
+          </component>
+        </component>
+
+        <component type="CircularProgressIndicator" condition="isLoading">
+          <property>position: center overlay</property>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_signInWithGoogle">
+          <step>1. Show loading indicator</step>
+          <step>2. Call Firebase Auth signInWithGoogle()</step>
+          <step>3. If success: create/update user in Firestore</step>
+          <step>4. If success: navigate to /main/today</step>
+          <step>5. If error: show SnackBar with error message</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <provider>AuthStateProvider (Riverpod)</provider>
+        <state>isLoading: bool</state>
+        <state>errorMessage: String?</state>
+      </state_management>
+
+      <transitions>
+        <transition to="/main/today" condition="login_success" type="pushReplacement" />
+      </transitions>
+
+      <error_handling>
+        <error type="sign_in_cancelled">
+          <message>Login dibatalkan</message>
+          <action>Dismiss</action>
+        </error>
+        <error type="network_error">
+          <message>Tidak ada koneksi internet. Coba lagi.</message>
+          <action>Retry</action>
+        </error>
+        <error type="unknown">
+          <message>Terjadi kesalahan. Silakan coba lagi.</message>
+          <action>Retry</action>
+        </error>
+      </error_handling>
+
+      <acceptance_criteria>
+        <criteria>Login button tersedia</criteria>
+        <criteria>Berhasil login dalam ≤3 tap</criteria>
+        <criteria>Profil nama dan foto dari Google ditampilkan setelah login</criteria>
+        <criteria>Error snackbar muncul jika gagal</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         MAIN APP SHELL (Bottom Navigation)
+         ==================================================================== -->
+    <screen id="main_shell" route="/main">
+      <name>Main App Shell</name>
+      <description>Container with bottom navigation bar for 4 main tabs</description>
+      
+      <components>
+        <component type="Scaffold">
+          <property>body: IndexedStack(index: currentTabIndex, children: [...])</property>
+          <property>bottomNavigationBar: BottomNavigationBar</property>
+        </component>
+
+        <component type="BottomNavigationBar">
+          <items>
+            <item index="0" icon="Icons.home" label="Today" />
+            <item index="1" icon="Icons.assignment" label="My Notes" />
+            <item index="2" icon="Icons.explore" label="Discover" />
+            <item index="3" icon="Icons.person" label="Profile" />
+          </items>
+          <property>currentIndex: currentTabIndex</property>
+          <property>onTap: (index) => setState(() => currentTabIndex = index)</property>
+          <property>type: fixed</property>
+        </component>
+      </components>
+
+      <state_management>
+        <state>int currentTabIndex = 0</state>
+      </state_management>
+
+      <business_logic>
+        <on_init>
+          <step>1. Check and archive today's note if date changed</step>
+          <step>2. Sync offline data to Firestore if online</step>
+          <step>3. Initialize network connectivity listener</step>
+        </on_init>
+      </business_logic>
+    </screen>
+
+    <!-- ====================================================================
+         TAB 1: TODAY SCREEN
+         ==================================================================== -->
+    <screen id="today" route="/main/today" parent="main_shell">
+      <name>Today's Notes</name>
+      <description>Main screen showing today's grocery list with checklist</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Today's Notes"</property>
+          <property>actions: [
+            IconButton(icon: Icons.filter_list, onPressed: _showFilterSheet),
+            IconButton(icon: Icons.sort, onPressed: _showSortOptions)
+          ]</property>
+        </component>
+
+        <component type="Body" condition="items.isEmpty">
+          <component type="EmptyState">
+            <property>illustration: assets/images/empty_basket.svg</property>
+            <property>title: "Belum Ada Daftar Belanja"</property>
+            <property>subtitle: "Yuk mulai tambahkan bahan makanan yang kamu butuhkan!"</property>
+          </component>
+        </component>
+
+        <component type="Body" condition="items.isNotEmpty">
+          <component type="Card">
+            <property>margin: 16px horizontal</property>
+            <component type="Row">
+              <component type="CircularProgressIndicator">
+                <property>value: checkedCount / totalCount</property>
+                <property>size: 48x48</property>
+              </component>
+              <component type="Column">
+                <component type="Text">
+                  <property>text: "$checkedCount/$totalCount bahan sudah dibeli"</property>
+                  <property>style: headline6</property>
+                </component>
+                <component type="LinearProgressIndicator">
+                  <property>value: checkedCount / totalCount</property>
+                </component>
+              </component>
+            </component>
+          </component>
+
+          <component type="ListView.builder">
+            <property>itemCount: items.length</property>
+            <property>itemBuilder: (context, index) => GroceryItemCard(item: items[index])</property>
+            <property>padding: 16px</property>
+          </component>
+        </component>
+
+        <component type="Banner" condition="!isOnline">
+          <property>message: "Mode Offline - Fitur AI tidak tersedia"</property>
+          <property>backgroundColor: Colors.orange</property>
+        </component>
+
+        <component type="FloatingActionButton">
+          <property>icon: Icons.add</property>
+          <property>onPressed: () => _showAddBottomSheet()</property>
+          <property>tooltip: "Tambah bahan"</property>
+        </component>
+      </components>
+
+      <custom_widgets>
+        <widget name="GroceryItemCard">
+          <description>Card untuk setiap grocery item</description>
+          <components>
+            <component type="Dismissible">
+              <property>key: ValueKey(item.id)</property>
+              <property>direction: DismissDirection.endToStart</property>
+              <property>onDismissed: (direction) => _deleteItem(item)</property>
+              <property>background: Container(color: Colors.red, child: Icon(Icons.delete))</property>
+            </component>
+
+            <component type="ListTile">
+              <property>leading: Checkbox(
+                value: item.isChecked,
+                onChanged: (value) => _toggleCheckItem(item)
+              )</property>
+              <property>title: Text(
+                item.name,
+                style: item.isChecked ? TextStyle(decoration: TextDecoration.lineThrough) : null
+              )</property>
+              <property>subtitle: Text("${item.quantity} ${item.unit}")</property>
+              <property>trailing: Chip(label: Text(item.category))</property>
+              <property>onTap: () => _showEditDialog(item)</property>
+            </component>
+
+            <component type="HapticFeedback" trigger="onCheckToggle">
+              <property>type: HapticFeedback.selectionClick()</property>
+            </component>
+          </components>
+        </widget>
+      </custom_widgets>
+
+      <business_logic>
+        <function name="_showAddBottomSheet">
+          <step>Show ModalBottomSheet with 3 options:
+            1. Dari Link (AI) → navigate to /add-link
+            2. Input Manual → navigate to /add-manual
+            3. Reuse dari Arsip → navigate to /select-archive
+          </step>
+        </function>
+
+        <function name="_toggleCheckItem">
+          <step>1. Update item.isChecked in state</step>
+          <step>2. Play haptic feedback</step>
+          <step>3. Re-sort list (checked items to bottom)</step>
+          <step>4. Save to Hive and Firestore (if online)</step>
+        </function>
+
+        <function name="_deleteItem">
+          <step>1. Remove item from list</step>
+          <step>2. Show SnackBar with "Undo" button</step>
+          <step>3. If not undone after 3s, commit deletion</step>
+          <step>4. Save to Hive and Firestore</step>
+        </function>
+
+        <function name="_showEditDialog">
+          <step>Show dialog with form to edit item fields</step>
+          <step>On save: update item, save to storage</step>
+        </function>
+
+        <function name="_showFilterSheet">
+          <step>Show bottom sheet with category checkboxes</step>
+          <step>Filter items by selected categories</step>
+        </function>
+
+        <function name="_showSortOptions">
+          <step>Show dialog: Sort by Name | Category | Date Added | Status</step>
+          <step>Apply sort and refresh list</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <provider>TodayNoteProvider (Riverpod StateNotifier)</provider>
+        <state>TodayNote todayNote</state>
+        <state>bool isOnline</state>
+        <state>int checkedCount (computed)</state>
+        <state>int totalCount (computed)</state>
+      </state_management>
+
+      <data_flow>
+        <source>Hive (today_note_box) - primary data source</source>
+        <sync>Firestore (users/{userId}/today_note/active) when online</sync>
+        <update_trigger>On item add, edit, delete, check/uncheck</update_trigger>
+      </data_flow>
+
+      <acceptance_criteria>
+        <criteria>All items from AI and manual sources displayed</criteria>
+        <criteria>Checkbox updates item state with haptic feedback</criteria>
+        <criteria>Checked items move to bottom with strikethrough</criteria>
+        <criteria>Progress bar updates in real-time</criteria>
+        <criteria>Swipe to delete with undo SnackBar</criteria>
+        <criteria>FAB opens add options bottom sheet</criteria>
+        <criteria>Offline banner shown when no internet</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         ADD FROM LINK (AI EXTRACTION)
+         ==================================================================== -->
+    <screen id="add_link" route="/add-link">
+      <name>Add from Link (AI)</name>
+      <description>Input recipe URL for AI extraction</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Tambah dari Link"</property>
+          <property>leading: BackButton</property>
+        </component>
+
+        <component type="Body">
+          <component type="Padding">
+            <property>padding: 24px all sides</property>
+
+            <component type="Text">
+              <property>text: "Paste link resep YouTube atau blog"</property>
+              <property>style: headline6</property>
+            </component>
+
+            <component type="SizedBox">height: 16</component>
+
+            <component type="TextField">
+              <property>controller: urlController</property>
+              <property>decoration: InputDecoration(
+                hintText: "https://youtube.com/watch?v=... atau https://cookpad.com/...",
+                prefixIcon: Icon(Icons.link),
+                border: OutlineInputBorder
+              )</property>
+              <property>keyboardType: TextInputType.url</property>
+              <property>onChanged: (value) => _validateUrl(value)</property>
+            </component>
+
+            <component type="SizedBox">height: 8</component>
+
+            <component type="TextButton">
+              <property>label: "Atau Input Teks Manual"</property>
+              <property>onPressed: () => Navigator.pushNamed('/add-text')</property>
+            </component>
+
+            <component type="SizedBox">height: 32</component>
+
+            <component type="ElevatedButton" condition="!isProcessing">
+              <property>label: "Ekstrak Bahan"</property>
+              <property>onPressed: isValidUrl ? () => _extractIngredients() : null</property>
+              <property>style: full width, height 48</property>
+            </component>
+
+            <component type="Column" condition="isProcessing">
+              <component type="CircularProgressIndicator" />
+              <component type="SizedBox">height: 16</component>
+              <component type="Text">
+                <property>text: "Memproses resep dengan AI..."</property>
+                <property>style: bodyText2</property>
+              </component>
+              <component type="LinearProgressIndicator">
+                <property>value: processingProgress (0.0 to 1.0)</property>
+              </component>
+              <component type="Text">
+                <property>text: "$elapsedSeconds / 8 detik"</property>
+                <property>style: caption</property>
+              </component>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_validateUrl">
+          <step>1. Check if input matches URL pattern (regex)</step>
+          <step>2. Update isValidUrl state</step>
+          <step>3. Enable/disable button accordingly</step>
+        </function>
+
+        <function name="_extractIngredients">
+          <step>1. Show loading state</step>
+          <step>2. Start timer (max 8 seconds with timeout)</step>
+          <step>3. Call Cloud Function: extractIngredientsFromUrl(url)</step>
+          <step>4. Cloud Function logic:
+            - If YouTube: fetch transcript via YouTube API
+            - If blog: scrape HTML content
+            - Send content to Gemini API for extraction
+            - Parse Gemini response into List&lt;GroceryItem&gt;
+          </step>
+          <step>5. If success: navigate to /review-ai with result data</step>
+          <step>6. If error: show error dialog based on error type</step>
+        </function>
+      </business_logic>
+
+      <api_integration>
+        <cloud_function name="extractIngredientsFromUrl">
+          <endpoint>https://[region]-[project].cloudfunctions.net/extractIngredients</endpoint>
+          <method>POST</method>
+          <request_body>
+            {
+              "url": String,
+              "userId": String
+            }
+          </request_body>
+          <response_success>
+            {
+              "success": true,
+              "recipeTitle": String,
+              "recipeUrl": String,
+              "ingredients": [
+                {
+                  "name": String,
+                  "quantity": Number,
+                  "unit": String,
+                  "category": String
+                }
+              ]
+            }
+          </response_success>
+          <response_error>
+            {
+              "success": false,
+              "error": "no_recipe_detected" | "timeout" | "no_transcript" | "network_error",
+              "message": String
+            }
+          </response_error>
+          <timeout>10 seconds</timeout>
+        </cloud_function>
+      </api_integration>
+
+      <state_management>
+        <provider>LinkExtractionProvider</provider>
+        <state>String urlInput</state>
+        <state>bool isValidUrl</state>
+        <state>bool isProcessing</state>
+        <state>double processingProgress</state>
+        <state>int elapsedSeconds</state>
+      </state_management>
+
+      <error_handling>
+        <error type="no_recipe_detected">
+          <dialog>
+            <title>Bukan Resep</title>
+            <message>Link ini tidak terdeteksi sebagai resep. Coba link lain yang berisi resep makanan.</message>
+            <actions>
+              <action>Coba Link Lain (dismiss)</action>
+              <action>Input Manual (navigate to /add-manual)</action>
+            </actions>
+          </dialog>
+        </error>
+
+        <error type="timeout">
+          <dialog>
+            <title>Halaman Terlalu Lambat</title>
+            <message>Halaman terlalu lambat dimuat. Coba buka link di browser, lalu salin teks resepnya dan paste di sini.</message>
+            <actions>
+              <action>Coba Link Lain (dismiss)</action>
+              <action>Input Teks Manual (navigate to /add-text)</action>
+            </actions>
+          </dialog>
+        </error>
+
+        <error type="no_transcript">
+          <dialog>
+            <title>Video Tanpa Teks</title>
+            <message>Video tidak memiliki teks tersedia. Coba cari resep yang sama dalam format blog.</message>
+            <actions>
+              <action>Coba Link Lain (dismiss)</action>
+              <action>Cari di Rekomendasi (navigate to /main/discover)</action>
+            </actions>
+          </dialog>
+        </error>
+
+        <error type="network_error">
+          <dialog>
+            <title>Tidak Ada Koneksi</title>
+            <message>Fitur AI butuh koneksi internet.</message>
+            <actions>
+              <action>Tutup (dismiss)</action>
+            </actions>
+          </dialog>
+        </error>
+      </error_handling>
+
+      <transitions>
+        <transition to="/review-ai" condition="extraction_success" type="push" />
+        <transition to="/add-text" trigger="fallback_button" type="push" />
+        <transition to="/main/discover" trigger="search_recipes_button" type="pushReplacement" />
+      </transitions>
+
+      <acceptance_criteria>
+        <criteria>URL validation before request</criteria>
+        <criteria>Loading state shows for ≤8 seconds</criteria>
+        <criteria>Clear and actionable error messages</criteria>
+        <criteria>Fallback to manual input available</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         ADD FROM TEXT MANUAL (FALLBACK)
+         ==================================================================== -->
+    <screen id="add_text" route="/add-text">
+      <name>Add from Text Manual</name>
+      <description>Paste recipe text as fallback for problematic links</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Input Teks Resep"</property>
+          <property>leading: BackButton</property>
+        </component>
+
+        <component type="Body">
+          <component type="Padding">
+            <property>padding: 24px all sides</property>
+
+            <component type="Text">
+              <property>text: "Paste atau ketik resep lengkap di sini"</property>
+              <property>style: headline6</property>
+            </component>
+
+            <component type="SizedBox">height: 16</component>
+
+            <component type="TextField">
+              <property>controller: textController</property>
+              <property>decoration: InputDecoration(
+                hintText: "Contoh:\n\nBahan:\n- 2 siung bawang putih\n- 200gr daging ayam\n- 1 sdt garam\n...",
+                border: OutlineInputBorder
+              )</property>
+              <property>maxLines: 15</property>
+              <property>minLines: 10</property>
+              <property>keyboardType: TextInputType.multiline</property>
+            </component>
+
+            <component type="SizedBox">height: 24</component>
+
+            <component type="ElevatedButton">
+              <property>label: "Proses dengan AI"</property>
+              <property>onPressed: textController.text.isNotEmpty ? () => _extractFromText() : null</property>
+              <property>style: full width, height 48</property>
+            </component>
+
+            <component type="Column" condition="isProcessing">
+              <component type="CircularProgressIndicator" />
+              <component type="Text">
+                <property>text: "Memproses teks..."</property>
+              </component>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_extractFromText">
+          <step>1. Show loading state</step>
+          <step>2. Call Cloud Function: extractIngredientsFromText(text)</step>
+          <step>3. If success: navigate to /review-ai</step>
+          <step>4. If error: show error dialog</step>
+        </function>
+      </business_logic>
+
+      <api_integration>
+        <cloud_function name="extractIngredientsFromText">
+          <endpoint>https://[region]-[project].cloudfunctions.net/extractIngredientsFromText</endpoint>
+          <method>POST</method>
+          <request_body>
+            {
+              "text": String,
+              "userId": String
+            }
+          </request_body>
+          <response>Same structure as extractIngredientsFromUrl</response>
+        </cloud_function>
+      </api_integration>
+
+      <transitions>
+        <transition to="/review-ai" condition="extraction_success" type="push" />
+      </transitions>
+    </screen>
+
+    <!-- ====================================================================
+         REVIEW AI RESULT
+         ==================================================================== -->
+    <screen id="review_ai" route="/review-ai">
+      <name>Review AI Extraction Result</name>
+      <description>Review and edit AI-extracted ingredients before saving</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Review Hasil AI"</property>
+          <property>leading: BackButton</property>
+        </component>
+
+        <component type="Body">
+          <component type="Card">
+            <property>margin: 16px</property>
+            <component type="ListTile">
+              <property>leading: Icon(Icons.restaurant_menu)</property>
+              <property>title: Text(recipeTitle)</property>
+              <property>subtitle: Text(recipeUrl)</property>
+            </component>
+            <component type="Divider" />
+            <component type="Padding">
+              <property>padding: 16px</property>
+              <component type="Text">
+                <property>text: "${ingredients.length} bahan terdeteksi"</property>
+                <property>style: caption</property>
+              </component>
+            </component>
+          </component>
+
+          <component type="Padding">
+            <property>padding: 16px horizontal, 8px vertical</property>
+            <component type="Row">
+              <component type="Text">
+                <property>text: "Daftar Bahan"</property>
+                <property>style: headline6</property>
+              </component>
+              <component type="Spacer" />
+              <component type="IconButton">
+                <property>icon: Icons.add</property>
+                <property>onPressed: () => _showAddItemDialog()</property>
+                <property>tooltip: "Tambah item"</property>
+              </component>
+            </component>
+          </component>
+
+          <component type="ReorderableListView.builder">
+            <property>itemCount: ingredients.length</property>
+            <property>itemBuilder: (context, index) => EditableIngredientCard(
+              key: ValueKey(ingredients[index].id),
+              item: ingredients[index],
+              onEdit: () => _editItem(index),
+              onDelete: () => _deleteItem(index)
+            )</property>
+            <property>onReorder: (oldIndex, newIndex) => _reorderItems(oldIndex, newIndex)</property>
+          </component>
+
+          <component type="Padding">
+            <property>padding: 16px</property>
+            <component type="ElevatedButton">
+              <property>label: "Simpan ke Today's Notes"</property>
+              <property>onPressed: () => _saveToToday()</property>
+              <property>style: full width, height 48</property>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <custom_widgets>
+        <widget name="EditableIngredientCard">
+          <description>Card with edit and delete buttons</description>
+          <components>
+            <component type="Card">
+              <component type="ListTile">
+                <property>leading: Icon(Icons.drag_handle)</property>
+                <property>title: Text(item.name)</property>
+                <property>subtitle: Text("${item.quantity} ${item.unit} • ${item.category}")</property>
+                <property>trailing: Row(
+                  IconButton(icon: Icons.edit, onPressed: onEdit),
+                  IconButton(icon: Icons.delete, onPressed: onDelete)
+                )</property>
+              </component>
+            </component>
+          </components>
+        </widget>
+      </custom_widgets>
+
+      <business_logic>
+        <function name="_editItem">
+          <step>Show dialog with form fields (name, quantity, unit, category, notes)</step>
+          <step>On save: update item in list</step>
+        </function>
+
+        <function name="_deleteItem">
+          <step>Show confirmation dialog</step>
+          <step>On confirm: remove from list</step>
+        </function>
+
+        <function name="_showAddItemDialog">
+          <step>Show dialog with form to add new item manually</step>
+          <step>On save: add to ingredients list</step>
+        </function>
+
+        <function name="_reorderItems">
+          <step>Update order in ingredients list</step>
+        </function>
+
+        <function name="_saveToToday">
+          <step>1. Get current TodayNote from Hive</step>
+          <step>2. Add all ingredients to todayNote.items</step>
+          <step>3. Set recipeTitle and recipeUrl if from AI link</step>
+          <step>4. Save to Hive</step>
+          <step>5. If online: sync to Firestore</step>
+          <step>6. Show success SnackBar</step>
+          <step>7. Navigate back to /main/today</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <state>String recipeTitle</state>
+        <state>String recipeUrl</state>
+        <state>List&lt;GroceryItem&gt; ingredients</state>
+      </state_management>
+
+      <transitions>
+        <transition to="/main/today" condition="saved" type="popUntil" />
+      </transitions>
+
+      <acceptance_criteria>
+        <criteria>User can edit any item (name, quantity, unit, category)</criteria>
+        <criteria>User can delete items with confirmation</criteria>
+        <criteria>User can add new items manually</criteria>
+        <criteria>User can reorder items via drag handle</criteria>
+        <criteria>Notes saved to Today immediately on save button</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         ADD MANUAL GROCERY ITEM
+         ==================================================================== -->
+    <screen id="add_manual" route="/add-manual">
+      <name>Add Manual Grocery Item</name>
+      <description>Manually input grocery items with ingredient search</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Tambah Bahan Manual"</property>
+          <property>leading: BackButton</property>
+        </component>
+
+        <component type="Body">
+          <component type="Padding">
+            <property>padding: 16px</property>
+
+            <component type="SearchBar">
+              <property>hintText: "Cari bahan dari riwayat..."</property>
+              <property>onChanged: (query) => _searchIngredientHistory(query)</property>
+            </component>
+
+            <component type="ListView" condition="searchResults.isNotEmpty">
+              <description>Search results from ingredient history</description>
+              <property>itemBuilder: (context, index) => ListTile(
+                title: Text(searchResults[index].name),
+                subtitle: Text(searchResults[index].category),
+                trailing: Text("${searchResults[index].useCount}x"),
+                onTap: () => _selectFromHistory(searchResults[index])
+              )</property>
+            </component>
+
+            <component type="Divider" condition="searchResults.isNotEmpty" />
+
+            <component type="Form">
+              <property>key: formKey</property>
+
+              <component type="TextFormField">
+                <property>controller: nameController</property>
+                <property>decoration: InputDecoration(labelText: "Nama Bahan *")</property>
+                <property>validator: (value) => value.isEmpty ? "Wajib diisi" : null</property>
+              </component>
+
+              <component type="Row">
+                <component type="Expanded">
+                  <component type="TextFormField">
+                    <property>controller: quantityController</property>
+                    <property>decoration: InputDecoration(labelText: "Jumlah")</property>
+                    <property>keyboardType: TextInputType.numberWithOptions(decimal: true)</property>
+                  </component>
+                </component>
+                <component type="SizedBox">width: 16</component>
+                <component type="Expanded">
+                  <component type="DropdownButtonFormField">
+                    <property>decoration: InputDecoration(labelText: "Satuan")</property>
+                    <property>items: ["gram", "kg", "ml", "liter", "sdm", "sdt", "buah", "ikat", "bungkus", "botol", "kaleng", "lembar", "siung", "batang", "ekor", "porsi"]</property>
+                    <property>onChanged: (value) => setState(() => selectedUnit = value)</property>
+                  </component>
+                </component>
+              </component>
+
+              <component type="DropdownButtonFormField">
+                <property>decoration: InputDecoration(labelText: "Kategori")</property>
+                <property>items: [
+                  "Sayuran",
+                  "Buah",
+                  "Daging &amp; Seafood",
+                  "Bumbu &amp; Rempah",
+                  "Susu &amp; Olahan",
+                  "Karbohidrat &amp; Biji-bijian",
+                  "Minuman",
+                  "Frozen Food",
+                  "Snack",
+                  "Lainnya"
+                ]</property>
+                <property>onChanged: (value) => setState(() => selectedCategory = value)</property>
+              </component>
+
+              <component type="TextFormField">
+                <property>controller: notesController</property>
+                <property>decoration: InputDecoration(
+                  labelText: "Catatan Tambahan (Opsional)",
+                  hintText: "Contoh: merk A, ukuran besar"
+                )</property>
+                <property>maxLines: 2</property>
+              </component>
+            </component>
+
+            <component type="SizedBox">height: 24</component>
+
+            <component type="Row">
+              <component type="Expanded">
+                <component type="OutlinedButton">
+                  <property>label: "+ Tambah Item Lain"</property>
+                  <property>onPressed: () => _addToTempList()</property>
+                </component>
+              </component>
+              <component type="SizedBox">width: 8</component>
+              <component type="Expanded">
+                <component type="ElevatedButton">
+                  <property>label: "Simpan ke Today"</property>
+                  <property>onPressed: () => _saveAllToToday()</property>
+                </component>
+              </component>
+            </component>
+
+            <component type="ListView" condition="tempItems.isNotEmpty">
+              <description>List of items added but not yet saved</description>
+              <property>shrinkWrap: true</property>
+              <property>physics: NeverScrollableScrollPhysics</property>
+              <property>itemBuilder: (context, index) => Card(
+                child: ListTile(
+                  title: Text(tempItems[index].name),
+                  subtitle: Text("${tempItems[index].quantity} ${tempItems[index].unit}"),
+                  trailing: IconButton(
+                    icon: Icons.close,
+                    onPressed: () => _removeTempItem(index)
+                  )
+                )
+              )</property>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_searchIngredientHistory">
+          <step>1. Query Hive ingredient_cache_box with search term</step>
+          <step>2. Filter by name (case-insensitive, partial match)</step>
+          <step>3. Sort by useCount descending</step>
+          <step>4. Update searchResults (max 5 results)</step>
+          <step>5. Search performance: ≤300ms</step>
+        </function>
+
+        <function name="_selectFromHistory">
+          <step>1. Auto-fill form with ingredient data</step>
+          <step>2. Set quantity to 1 (default)</step>
+          <step>3. Focus on quantity field for quick edit</step>
+        </function>
+
+        <function name="_addToTempList">
+          <step>1. Validate form</step>
+          <step>2. Create GroceryItem from form data</step>
+          <step>3. Add to tempItems list</step>
+          <step>4. Clear form for next item</step>
+          <step>5. Update ingredient history (increment useCount, update lastUsed)</step>
+        </function>
+
+        <function name="_saveAllToToday">
+          <step>1. Validate current form</step>
+          <step>2. Add current item to tempItems if valid</step>
+          <step>3. Get TodayNote from Hive</step>
+          <step>4. Add all tempItems to todayNote.items</step>
+          <step>5. Save to Hive</step>
+          <step>6. Sync to Firestore if online</step>
+          <step>7. Update ingredient history in Hive and Firestore</step>
+          <step>8. Show success SnackBar</step>
+          <step>9. Navigate back to /main/today</step>
+        </function>
+
+        <function name="_removeTempItem">
+          <step>Remove item from tempItems list</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <state>List&lt;IngredientHistory&gt; searchResults</state>
+        <state>List&lt;GroceryItem&gt; tempItems</state>
+        <state>TextEditingController nameController</state>
+        <state>TextEditingController quantityController</state>
+        <state>TextEditingController notesController</state>
+        <state>String? selectedUnit</state>
+        <state>String? selectedCategory</state>
+      </state_management>
+
+      <data_flow>
+        <read>Hive ingredient_cache_box for search</read>
+        <write>Hive today_note_box for new items</write>
+        <write>Firestore users/{userId}/today_note/active</write>
+        <write>Hive and Firestore ingredient_history (update useCount)</write>
+      </data_flow>
+
+      <transitions>
+        <transition to="/main/today" condition="saved" type="pop" />
+      </transitions>
+
+      <acceptance_criteria>
+        <criteria>Search shows ingredient history results</criteria>
+        <criteria>Search result time ≤300ms (local cache)</criteria>
+        <criteria>Tap result auto-fills form with quantity default 1</criteria>
+        <criteria>User can add multiple items before saving</criteria>
+        <criteria>All items saved to Today's Notes on final save</criteria>
+        <criteria>Ingredient history updated with each new item</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         SELECT ARCHIVE TO REUSE
+         ==================================================================== -->
+    <screen id="select_archive" route="/select-archive">
+      <name>Select Archive to Reuse</name>
+      <description>Choose archived note to copy to Today</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Reuse dari Arsip"</property>
+          <property>leading: BackButton</property>
+        </component>
+
+        <component type="Body" condition="archives.isEmpty">
+          <component type="EmptyState">
+            <property>illustration: assets/images/empty_archive.svg</property>
+            <property>title: "Belum Ada Arsip"</property>
+            <property>subtitle: "Notes yang sudah lewat akan muncul di sini"</property>
+          </component>
+        </component>
+
+        <component type="Body" condition="archives.isNotEmpty">
+          <component type="ListView.builder">
+            <property>itemCount: archives.length</property>
+            <property>itemBuilder: (context, index) => ArchiveCard(
+              archive: archives[index],
+              onTap: () => _showReuseConfirmation(archives[index])
+            )</property>
+          </component>
+        </component>
+      </components>
+
+      <custom_widgets>
+        <widget name="ArchiveCard">
+          <components>
+            <component type="Card">
+              <component type="ListTile">
+                <property>leading: CircleAvatar(
+                  child: Text(DateFormat('dd').format(archive.date))
+                )</property>
+                <property>title: Text(
+                  archive.recipeTitle ?? "Manual Notes"
+                )</property>
+                <property>subtitle: Column(
+                  Text("${DateFormat('EEEE, dd MMMM yyyy').format(archive.date)}"),
+                  Text("${archive.items.length} bahan • ${(archive.completionRate * 100).toInt()}% selesai")
+                )</property>
+                <property>trailing: Icon(Icons.chevron_right)</property>
+                <property>onTap: onTap</property>
+              </component>
+            </component>
+          </components>
+        </widget>
+      </custom_widgets>
+
+      <business_logic>
+        <function name="_showReuseConfirmation">
+          <step>Show AlertDialog:
+            Title: "Reuse Notes Ini?"
+            Content: "Semua bahan dari [tanggal] akan ditambahkan ke Today's Notes."
+            Actions: ["Batal", "Ya, Reuse"]
+          </step>
+          <step>On confirm: call _reuseArchive()</step>
+        </function>
+
+        <function name="_reuseArchive">
+          <step>1. Get TodayNote from Hive</step>
+          <step>2. Create copies of all items from archive (reset isChecked to false)</step>
+          <step>3. Add copies to todayNote.items</step>
+          <step>4. Save to Hive and Firestore</step>
+          <step>5. Show success SnackBar</step>
+          <step>6. Navigate back to /main/today</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <provider>ArchivedNotesProvider</provider>
+        <state>List&lt;ArchivedNote&gt; archives (sorted newest to oldest)</state>
+      </state_management>
+
+      <data_flow>
+        <read>Hive archived_notes_box (cached last 30)</read>
+        <read>Firestore users/{userId}/notes (on-demand for older archives)</read>
+        <write>Hive today_note_box (reused items)</write>
+      </data_flow>
+
+      <transitions>
+        <transition to="/main/today" condition="reuse_confirmed" type="popUntil" />
+      </transitions>
+    </screen>
+
+    <!-- ====================================================================
+         TAB 2: MY NOTES (ARCHIVES)
+         ==================================================================== -->
+    <screen id="mynotes" route="/main/mynotes" parent="main_shell">
+      <name>My Notes Archive</name>
+      <description>List of archived grocery notes from past days</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "My Notes"</property>
+          <property>actions: [
+            IconButton(icon: Icons.search, onPressed: () => _showSearchDelegate())
+          ]</property>
+        </component>
+
+        <component type="Body" condition="archives.isEmpty">
+          <component type="EmptyState">
+            <property>illustration: assets/images/empty_folder.svg</property>
+            <property>title: "Belum Ada Riwayat"</property>
+            <property>subtitle: "Notes lama akan tersimpan otomatis setiap hari"</property>
+          </component>
+        </component>
+
+        <component type="Body" condition="archives.isNotEmpty">
+          <component type="RefreshIndicator">
+            <property>onRefresh: () => _refreshArchives()</property>
+            <property>child: ListView.builder(
+              itemCount: archives.length + 1,
+              itemBuilder: (context, index) {
+                if (index == archives.length) {
+                  return hasMore ? LoadMoreButton(onPressed: _loadMoreArchives) : SizedBox.shrink();
+                }
+                return ArchiveCard(
+                  archive: archives[index],
+                  onTap: () => Navigator.pushNamed('/archive-detail/${archives[index].id}'),
+                  onDelete: () => _deleteArchive(archives[index])
+                );
+              }
+            )</property>
+          </component>
+        </component>
+      </components>
+
+      <custom_widgets>
+        <widget name="ArchiveCard">
+          <description>Same as in select_archive but with swipe to delete</description>
+          <components>
+            <component type="Dismissible">
+              <property>key: ValueKey(archive.id)</property>
+              <property>direction: DismissDirection.endToStart</property>
+              <property>onDismissed: (direction) => onDelete()</property>
+              <property>confirmDismiss: (direction) async {
+                return await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text("Hapus Arsip?"),
+                    content: Text("Arsip ini akan dihapus permanen."),
+                    actions: [
+                      TextButton("Batal"),
+                      TextButton("Hapus", style: destructive)
+                    ]
+                  )
+                );
+              }</property>
+              <property>background: Container(color: Colors.red, child: Icon(Icons.delete))</property>
+            </component>
+            <component type="Card">
+              <property>Same structure as select_archive ArchiveCard</property>
+            </component>
+          </components>
+        </widget>
+      </custom_widgets>
+
+      <business_logic>
+        <function name="_refreshArchives">
+          <step>1. If online: fetch from Firestore</step>
+          <step>2. Update Hive cache (last 30 notes)</step>
+          <step>3. Reload state</step>
+        </function>
+
+        <function name="_loadMoreArchives">
+          <step>1. Fetch next page from Firestore (pagination)</step>
+          <step>2. Append to archives list</step>
+        </function>
+
+        <function name="_deleteArchive">
+          <step>1. Show confirmation dialog</step>
+          <step>2. On confirm: delete from Firestore and Hive</step>
+          <step>3. Remove from list</step>
+          <step>4. Show SnackBar confirmation</step>
+        </function>
+
+        <function name="_showSearchDelegate">
+          <step>Show search delegate to filter archives by date or recipe name</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <provider>ArchivedNotesProvider</provider>
+        <state>List&lt;ArchivedNote&gt; archives (paginated)</state>
+        <state>bool hasMore (more pages available)</state>
+      </state_management>
+
+      <data_flow>
+        <read>Hive archived_notes_box (first 30)</read>
+        <read>Firestore users/{userId}/notes (pagination)</read>
+        <write>Firestore (on delete)</write>
+      </data_flow>
+
+      <acceptance_criteria>
+        <criteria>Archives sorted newest to oldest</criteria>
+        <criteria>Each card shows date, item count, recipe title</criteria>
+        <criteria>Tap card navigates to detail</criteria>
+        <criteria>Pull to refresh works</criteria>
+        <criteria>Swipe to delete with confirmation</criteria>
+        <criteria>Load more button for pagination</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         ARCHIVE DETAIL
+         ==================================================================== -->
+    <screen id="archive_detail" route="/archive-detail/:id">
+      <name>Archive Detail</name>
+      <description>Read-only view of archived note with reuse option</description>
+      
+      <route_parameters>
+        <param name="id" type="String">Archive note ID</param>
+      </route_parameters>
+
+      <components>
+        <component type="AppBar">
+          <property>title: "Notes ${DateFormat('dd MMM yyyy').format(archive.date)}"</property>
+          <property>leading: BackButton</property>
+          <property>actions: [
+            IconButton(icon: Icons.share, onPressed: () => _shareArchive()),
+            IconButton(icon: Icons.delete, onPressed: () => _deleteArchive())
+          ]</property>
+        </component>
+
+        <component type="Body">
+          <component type="Card">
+            <property>margin: 16px</property>
+            <component type="Padding">
+              <property>padding: 16px</property>
+              <component type="Column">
+                <component type="Text" condition="archive.recipeTitle != null">
+                  <property>text: archive.recipeTitle</property>
+                  <property>style: headline6</property>
+                </component>
+                <component type="TextButton" condition="archive.recipeUrl != null">
+                  <property>label: "Buka Sumber"</property>
+                  <property>icon: Icons.open_in_new</property>
+                  <property>onPressed: () => Navigator.pushNamed('/web-view', arguments: archive.recipeUrl)</property>
+                </component>
+                <component type="Divider" />
+                <component type="Row">
+                  <component type="Text">
+                    <property>text: "${archive.items.length} bahan"</property>
+                  </component>
+                  <component type="Spacer" />
+                  <component type="Text">
+                    <property>text: "${(archive.completionRate * 100).toInt()}% selesai"</property>
+                  </component>
+                </component>
+              </component>
+            </component>
+          </component>
+
+          <component type="Padding">
+            <property>padding: 16px horizontal, 8px vertical</property>
+            <component type="Text">
+              <property>text: "Daftar Bahan"</property>
+              <property>style: headline6</property>
+            </component>
+          </component>
+
+          <component type="ListView.builder">
+            <description>Read-only list grouped by category</description>
+            <property>itemCount: groupedItems.length</property>
+            <property>itemBuilder: (context, index) {
+              final category = groupedItems.keys.elementAt(index);
+              final items = groupedItems[category];
+              return Column(
+                CategoryHeader(category),
+                ...items.map((item) => ListTile(
+                  leading: Checkbox(value: item.isChecked, onChanged: null),
+                  title: Text(
+                    item.name,
+                    style: item.isChecked ? TextStyle(decoration: TextDecoration.lineThrough) : null
+                  ),
+                  subtitle: Text("${item.quantity} ${item.unit}"),
+                  enabled: false
+                ))
+              );
+            }</property>
+          </component>
+
+          <component type="Padding">
+            <property>padding: 16px</property>
+            <component type="ElevatedButton">
+              <property>label: "Reuse ke Today's Notes"</property>
+              <property>icon: Icons.refresh</property>
+              <property>onPressed: () => _showReuseConfirmation()</property>
+              <property>style: full width, height 48</property>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_shareArchive">
+          <step>1. Generate text list of ingredients</step>
+          <step>2. Use Share.share() to share via system share sheet</step>
+        </function>
+
+        <function name="_deleteArchive">
+          <step>1. Show confirmation dialog</step>
+          <step>2. On confirm: delete from Firestore and Hive</step>
+          <step>3. Navigate back to /main/mynotes</step>
+        </function>
+
+        <function name="_showReuseConfirmation">
+          <step>Same as select_archive screen</step>
+          <step>On confirm: copy items to Today, navigate to /main/today</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <state>ArchivedNote archive (loaded by ID)</state>
+        <state>Map&lt;String, List&lt;GroceryItem&gt;&gt; groupedItems (grouped by category)</state>
+      </state_management>
+
+      <transitions>
+        <transition to="/web-view" trigger="open_source_button" type="push" />
+        <transition to="/main/today" condition="reuse_confirmed" type="popUntil" />
+        <transition to="/main/mynotes" condition="deleted" type="pop" />
+      </transitions>
+
+      <acceptance_criteria>
+        <criteria>Display all items in read-only mode</criteria>
+        <criteria>Show checked state with strikethrough</criteria>
+        <criteria>Group items by category</criteria>
+        <criteria>Reuse button copies all items to Today</criteria>
+        <criteria>Share button works</criteria>
+        <criteria>Delete button with confirmation</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         TAB 3: DISCOVER RECIPES
+         ==================================================================== -->
+    <screen id="discover" route="/main/discover" parent="main_shell">
+      <name>Discover Recipes</name>
+      <description>Browse and search recipe recommendations</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Discover"</property>
+        </component>
+
+        <component type="Body">
+          <component type="Padding">
+            <property>padding: 16px horizontal, 8px vertical</property>
+            <component type="SearchBar">
+              <property>hintText: "Cari resep..."</property>
+              <property>onChanged: (query) => _searchRecipes(query)</property>
+              <property>onSubmitted: (query) => _searchRecipes(query)</property>
+            </component>
+          </component>
+
+          <component type="Padding">
+            <property>padding: 8px horizontal</property>
+            <component type="SingleChildScrollView">
+              <property>scrollDirection: horizontal</property>
+              <component type="Wrap">
+                <property>spacing: 8</property>
+                <description>Filter chips for categories</description>
+                <property>children: categories.map((cat) => FilterChip(
+                  label: Text(cat.emoji + " " + cat.name),
+                  selected: selectedCategories.contains(cat),
+                  onSelected: (selected) => _toggleCategory(cat, selected)
+                ))</property>
+              </component>
+            </component>
+          </component>
+
+          <component type="Row" condition="selectedCategories.isNotEmpty">
+            <property>padding: 8px horizontal</property>
+            <component type="TextButton">
+              <property>label: "Reset Filter"</property>
+              <property>icon: Icons.clear</property>
+              <property>onPressed: () => _clearFilters()</property>
+            </component>
+          </component>
+
+          <component type="EmptyState" condition="recipes.isEmpty &amp;&amp; !isLoading">
+            <property>illustration: assets/images/no_results.svg</property>
+            <property>title: "Tidak Ada Resep untuk \"$searchQuery\""</property>
+            <property>subtitle: "Coba kata kunci lain atau hapus filter"</property>
+          </component>
+
+          <component type="EmptyState" condition="!isOnline">
+            <property>icon: Icons.cloud_off</property>
+            <property>title: "Mode Offline"</property>
+            <property>subtitle: "Menampilkan ${cachedRecipes.length} resep ter-cache"</property>
+          </component>
+
+          <component type="GridView.builder" condition="recipes.isNotEmpty || isLoading">
+            <property>gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12
+            )</property>
+            <property>padding: 16px</property>
+            <property>itemCount: isLoading ? 6 : recipes.length</property>
+            <property>itemBuilder: (context, index) {
+              if (isLoading) return RecipeCardSkeleton();
+              return RecipeCard(
+                recipe: recipes[index],
+                onTap: () => Navigator.pushNamed('/recipe-detail/${recipes[index].id}')
+              );
+            }</property>
+          </component>
+
+          <component type="RefreshIndicator">
+            <property>onRefresh: () => _refreshRecipes()</property>
+          </component>
+        </component>
+      </components>
+
+      <custom_widgets>
+        <widget name="RecipeCard">
+          <components>
+            <component type="Card">
+              <component type="InkWell">
+                <property>onTap: onTap</property>
+                <component type="Column">
+                  <component type="ClipRRect">
+                    <property>borderRadius: 8</property>
+                    <component type="CachedNetworkImage">
+                      <property>imageUrl: recipe.thumbnail</property>
+                      <property>height: 120</property>
+                      <property>fit: BoxFit.cover</property>
+                      <property>placeholder: Shimmer placeholder</property>
+                    </component>
+                  </component>
+                  <component type="Padding">
+                    <property>padding: 12px</property>
+                    <component type="Column">
+                      <component type="Text">
+                        <property>text: recipe.title</property>
+                        <property>style: subtitle1</property>
+                        <property>maxLines: 2</property>
+                        <property>overflow: TextOverflow.ellipsis</property>
+                      </component>
+                      <component type="SizedBox">height: 4</component>
+                      <component type="Text">
+                        <property>text: recipe.category</property>
+                        <property>style: caption, gray</property>
+                      </component>
+                      <component type="Row" condition="recipe.cookingTime != null">
+                        <component type="Icon">
+                          <property>icon: Icons.access_time</property>
+                          <property>size: 14</property>
+                        </component>
+                        <component type="Text">
+                          <property>text: "${recipe.cookingTime} menit"</property>
+                          <property>style: caption</property>
+                        </component>
+                      </component>
+                    </component>
+                  </component>
+                </component>
+              </component>
+            </component>
+          </components>
+        </widget>
+
+        <widget name="RecipeCardSkeleton">
+          <description>Skeleton loading placeholder using Shimmer</description>
+          <components>
+            <component type="Card">
+              <component type="Shimmer">
+                <component type="Column">
+                  <component type="Container">
+                    <property>height: 120</property>
+                    <property>color: Colors.grey.shade300</property>
+                  </component>
+                  <component type="Padding">
+                    <property>padding: 12px</property>
+                    <component type="Column">
+                      <component type="Container">
+                        <property>height: 16</property>
+                        <property>width: double.infinity</property>
+                        <property>color: Colors.grey.shade300</property>
+                      </component>
+                      <component type="Container">
+                        <property>height: 12</property>
+                        <property>width: 80</property>
+                        <property>color: Colors.grey.shade300</property>
+                      </component>
+                    </component>
+                  </component>
+                </component>
+              </component>
+            </component>
+          </components>
+        </widget>
+      </custom_widgets>
+
+      <business_logic>
+        <function name="_searchRecipes">
+          <step>1. Set isLoading = true</step>
+          <step>2. Debounce 300ms</step>
+          <step>3. If online: query TheMealDB/Spoonacular API</step>
+          <step>4. If offline: filter cached recipes</step>
+          <step>5. Apply category filters</step>
+          <step>6. Update recipes list</step>
+          <step>7. Set isLoading = false</step>
+          <step>8. Search result time: ≤500ms</step>
+        </function>
+
+        <function name="_toggleCategory">
+          <step>1. Add/remove category from selectedCategories</step>
+          <step>2. Refilter recipes</step>
+        </function>
+
+        <function name="_clearFilters">
+          <step>1. Clear selectedCategories</step>
+          <step>2. Clear searchQuery</step>
+          <step>3. Reload all recipes</step>
+        </function>
+
+        <function name="_refreshRecipes">
+          <step>1. If online: fetch latest from API</step>
+          <step>2. Update Hive cache (last 50 recipes)</step>
+          <step>3. Reload state</step>
+        </function>
+      </business_logic>
+
+      <api_integration>
+        <primary_api>
+          <name>TheMealDB API</name>
+          <endpoint>https://www.themealdb.com/api/json/v1/1</endpoint>
+          <methods>
+            <method>GET /search.php?s={query}</method>
+            <method>GET /filter.php?c={category}</method>
+            <method>GET /lookup.php?i={id}</method>
+          </methods>
+        </primary_api>
+        <fallback>
+          <name>Firestore Curated Recipes</name>
+          <collection>recipes</collection>
+          <description>20-30 manually curated Indonesian recipes</description>
+        </fallback>
+      </api_integration>
+
+      <state_management>
+        <provider>RecipesProvider</provider>
+        <state>List&lt;Recipe&gt; recipes</state>
+        <state>List&lt;Recipe&gt; cachedRecipes (from Hive)</state>
+        <state>List&lt;String&gt; selectedCategories</state>
+        <state>String searchQuery</state>
+        <state>bool isLoading</state>
+        <state>bool isOnline</state>
+      </state_management>
+
+      <data_flow>
+        <read>TheMealDB API (when online)</read>
+        <read>Firestore recipes collection (fallback)</read>
+        <read>Hive cached_recipes_box (offline)</read>
+        <write>Hive cached_recipes_box (cache last 50 viewed)</write>
+      </data_flow>
+
+      <categories>
+        <category emoji="🍚" name="Masakan Indonesia" />
+        <category emoji="🍜" name="Masakan Asia" />
+        <category emoji="🍝" name="Masakan Barat" />
+        <category emoji="🥗" name="Vegetarian &amp; Vegan" />
+        <category emoji="🍗" name="Ayam &amp; Unggas" />
+        <category emoji="🥩" name="Daging Sapi &amp; Kambing" />
+        <category emoji="🐟" name="Seafood" />
+        <category emoji="🥘" name="Sup &amp; Soto" />
+        <category emoji="🍰" name="Kue &amp; Dessert" />
+        <category emoji="☕" name="Minuman &amp; Jus" />
+        <category emoji="🍱" name="Bekal &amp; Meal Prep" />
+        <category emoji="⚡" name="Masak Cepat (&lt;30 menit)" />
+      </categories>
+
+      <acceptance_criteria>
+        <criteria>Search results appear in ≤500ms</criteria>
+        <criteria>Case-insensitive and partial match search</criteria>
+        <criteria>Multiple category filters work simultaneously</criteria>
+        <criteria>Reset filter button clears all filters</criteria>
+        <criteria>Skeleton loading during data fetch</criteria>
+        <criteria>Pull to refresh works</criteria>
+        <criteria>Offline mode shows cached recipes with banner</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         RECIPE DETAIL
+         ==================================================================== -->
+    <screen id="recipe_detail" route="/recipe-detail/:id">
+      <name>Recipe Detail</name>
+      <description>Full recipe view with ingredients, steps, and action buttons</description>
+      
+      <route_parameters>
+        <param name="id" type="String">Recipe ID</param>
+      </route_parameters>
+
+      <components>
+        <component type="AppBar">
+          <property>elevation: 0</property>
+          <property>backgroundColor: transparent</property>
+          <property>leading: BackButton(color: Colors.white)</property>
+          <property>actions: [
+            IconButton(icon: Icons.share, color: Colors.white, onPressed: () => _shareRecipe())
+          ]</property>
+        </component>
+
+        <component type="Body">
+          <component type="SingleChildScrollView">
+            <component type="Stack">
+              <component type="CachedNetworkImage">
+                <property>imageUrl: recipe.thumbnail</property>
+                <property>height: 250</property>
+                <property>width: double.infinity</property>
+                <property>fit: BoxFit.cover</property>
+              </component>
+              <component type="Container">
+                <description>Gradient overlay</description>
+                <property>height: 250</property>
+                <property>decoration: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black54]
+                )</property>
+              </component>
+            </component>
+
+            <component type="Padding">
+              <property>padding: 24px</property>
+              <component type="Column">
+                <component type="Text">
+                  <property>text: recipe.title</property>
+                  <property>style: headline4, bold</property>
+                </component>
+
+                <component type="SizedBox">height: 8</component>
+
+                <component type="Wrap">
+                  <property>spacing: 8</property>
+                  <component type="Chip">
+                    <property>label: Text(recipe.category)</property>
+                    <property>avatar: Icon(Icons.category)</property>
+                  </component>
+                  <component type="Chip" condition="recipe.cookingTime != null">
+                    <property>label: Text("${recipe.cookingTime} menit")</property>
+                    <property>avatar: Icon(Icons.access_time)</property>
+                  </component>
+                  <component type="Chip" condition="recipe.servings != null">
+                    <property>label: Text("${recipe.servings} porsi")</property>
+                    <property>avatar: Icon(Icons.people)</property>
+                  </component>
+                  <component type="Chip" condition="recipe.difficulty != null">
+                    <property>label: Text(recipe.difficulty)</property>
+                    <property>avatar: Icon(Icons.bar_chart)</property>
+                  </component>
+                </component>
+
+                <component type="Divider">
+                  <property>height: 32</property>
+                </component>
+
+                <component type="Text">
+                  <property>text: "Bahan-bahan"</property>
+                  <property>style: headline6, bold</property>
+                </component>
+
+                <component type="SizedBox">height: 12</component>
+
+                <component type="ListView.builder">
+                  <property>shrinkWrap: true</property>
+                  <property>physics: NeverScrollableScrollPhysics</property>
+                  <property>itemCount: recipe.ingredients.length</property>
+                  <property>itemBuilder: (context, index) => Padding(
+                    padding: 8px vertical,
+                    child: Row(
+                      Icon(Icons.check_circle_outline, size: 20, color: Colors.green),
+                      SizedBox(width: 12),
+                      Expanded(child: Text(recipe.ingredients[index]))
+                    )
+                  )</property>
+                </component>
+
+                <component type="Divider">
+                  <property>height: 32</property>
+                </component>
+
+                <component type="Text">
+                  <property>text: "Langkah Memasak"</property>
+                  <property>style: headline6, bold</property>
+                </component>
+
+                <component type="SizedBox">height: 12</component>
+
+                <component type="ListView.builder">
+                  <property>shrinkWrap: true</property>
+                  <property>physics: NeverScrollableScrollPhysics</property>
+                  <property>itemCount: recipe.steps.length</property>
+                  <property>itemBuilder: (context, index) => Padding(
+                    padding: 12px vertical,
+                    child: Row(
+                      crossAxisAlignment: start,
+                      CircleAvatar(
+                        child: Text("${index + 1}"),
+                        backgroundColor: Colors.primary
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(child: Text(recipe.steps[index]))
+                    )
+                  )</property>
+                </component>
+
+                <component type="SizedBox">height: 24</component>
+
+                <component type="ElevatedButton">
+                  <property>label: "Buat Notes dari Resep Ini"</property>
+                  <property>icon: Icons.add_shopping_cart</property>
+                  <property>onPressed: () => _createNotesFromRecipe()</property>
+                  <property>style: full width, height 48, primary color</property>
+                </component>
+
+                <component type="SizedBox">height: 12</component>
+
+                <component type="OutlinedButton">
+                  <property>label: "Buka Sumber (${recipe.sourceType.toUpperCase()})"</property>
+                  <property>icon: Icons.open_in_new</property>
+                  <property>onPressed: () => Navigator.pushNamed('/web-view', arguments: recipe.sourceUrl)</property>
+                  <property>style: full width, height 48</property>
+                </component>
+              </component>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_createNotesFromRecipe">
+          <step>1. Show loading dialog</step>
+          <step>2. Call Cloud Function with recipe data (or extract locally)</step>
+          <step>3. Parse ingredients into List&lt;GroceryItem&gt;</step>
+          <step>4. Navigate to /review-ai with result</step>
+        </function>
+
+        <function name="_shareRecipe">
+          <step>1. Generate shareable text (title + ingredients + source URL)</step>
+          <step>2. Use Share.share()</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <state>Recipe recipe (loaded by ID)</state>
+      </state_management>
+
+      <data_flow>
+        <read>TheMealDB API or Firestore (recipe detail)</read>
+        <write>Hive cached_recipes_box (cache viewed recipe)</write>
+      </data_flow>
+
+      <transitions>
+        <transition to="/review-ai" trigger="create_notes_button" type="push" />
+        <transition to="/web-view" trigger="open_source_button" type="push" />
+      </transitions>
+
+      <acceptance_criteria>
+        <criteria>Display thumbnail, title, category, time, servings, difficulty</criteria>
+        <criteria>Show all ingredients with checkmarks</criteria>
+        <criteria>Show all steps numbered</criteria>
+        <criteria>"Buat Notes" button triggers AI extraction</criteria>
+        <criteria>"Buka Sumber" opens in-app WebView</criteria>
+        <criteria>Share button works</criteria>
+      </acceptance_criteria>
+    </screen>
+
+    <!-- ====================================================================
+         IN-APP WEB BROWSER
+         ==================================================================== -->
+    <screen id="web_view" route="/web-view">
+      <name>In-App Web Browser</name>
+      <description>WebView for opening recipe source URLs without leaving app</description>
+      
+      <route_arguments>
+        <arg name="url" type="String">URL to load</arg>
+      </route_arguments>
+
+      <components>
+        <component type="AppBar">
+          <property>title: Text(Uri.parse(url).host)</property>
+          <property>leading: BackButton</property>
+          <property>actions: [
+            IconButton(icon: Icons.refresh, onPressed: () => webViewController.reload()),
+            IconButton(icon: Icons.open_in_browser, onPressed: () => _openInExternalBrowser())
+          ]</property>
+        </component>
+
+        <component type="Body">
+          <component type="LinearProgressIndicator" condition="isLoading">
+            <property>value: loadingProgress</property>
+          </component>
+
+          <component type="WebView">
+            <property>initialUrl: url</property>
+            <property>javascriptMode: JavascriptMode.unrestricted</property>
+            <property>onWebViewCreated: (controller) => webViewController = controller</property>
+            <property>onPageStarted: (url) => setState(() => isLoading = true)</property>
+            <property>onPageFinished: (url) => setState(() => isLoading = false)</property>
+            <property>onProgress: (progress) => setState(() => loadingProgress = progress / 100)</property>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_openInExternalBrowser">
+          <step>Use url_launcher to open URL in device's default browser</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <state>String url</state>
+        <state>bool isLoading</state>
+        <state>double loadingProgress</state>
+        <state>WebViewController webViewController</state>
+      </state_management>
+    </screen>
+
+    <!-- ====================================================================
+         TAB 4: PROFILE & SETTINGS
+         ==================================================================== -->
+    <screen id="profile" route="/main/profile" parent="main_shell">
+      <name>Profile &amp; Settings</name>
+      <description>User profile, settings, and account management</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Profile"</property>
+        </component>
+
+        <component type="Body">
+          <component type="Column">
+            <component type="Container">
+              <property>padding: 24px</property>
+              <property>color: Colors.primary (light shade)</property>
+              <component type="Row">
+                <component type="CircleAvatar">
+                  <property>radius: 40</property>
+                  <property>backgroundImage: NetworkImage(user.photoUrl)</property>
+                </component>
+                <component type="SizedBox">width: 16</component>
+                <component type="Column">
+                  <component type="Text">
+                    <property>text: user.displayName</property>
+                    <property>style: headline5, bold, white</property>
+                  </component>
+                  <component type="Text">
+                    <property>text: user.email</property>
+                    <property>style: bodyText2, white70</property>
+                  </component>
+                </component>
+              </component>
+            </component>
+
+            <component type="SizedBox">height: 16</component>
+
+            <component type="ListTile">
+              <property>leading: Icon(Icons.history)</property>
+              <property>title: Text("Riwayat Bahan")</property>
+              <property>subtitle: Text("Kelola ingredient history")</property>
+              <property>trailing: Icon(Icons.chevron_right)</property>
+              <property>onTap: () => Navigator.pushNamed('/ingredient-history')</property>
+            </component>
+
+            <component type="Divider" />
+
+            <component type="ListTile">
+              <property>leading: Icon(Icons.palette)</property>
+              <property>title: Text("Tema Aplikasi")</property>
+              <property>subtitle: Text(currentTheme)</property>
+              <property>trailing: Icon(Icons.chevron_right)</property>
+              <property>onTap: () => _showThemeDialog()</property>
+            </component>
+
+            <component type="Divider" />
+
+            <component type="ListTile">
+              <property>leading: Icon(Icons.info)</property>
+              <property>title: Text("Tentang Aplikasi")</property>
+              <property>subtitle: Text("Versi 1.0.0")</property>
+              <property>trailing: Icon(Icons.chevron_right)</property>
+              <property>onTap: () => _showAboutDialog()</property>
+            </component>
+
+            <component type="Divider" />
+
+            <component type="SizedBox">height: 24</component>
+
+            <component type="ListTile">
+              <property>leading: Icon(Icons.logout, color: Colors.red)</property>
+              <property>title: Text("Keluar", style: TextStyle(color: Colors.red))</property>
+              <property>onTap: () => _showLogoutConfirmation()</property>
+            </component>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_showThemeDialog">
+          <step>Show dialog with 3 radio options: Light, Dark, System</step>
+          <step>On selection: update theme in Hive and Firestore, apply theme</step>
+        </function>
+
+        <function name="_showAboutDialog">
+          <step>Show dialog with app info: logo, name, version, author, year</step>
+        </function>
+
+        <function name="_showLogoutConfirmation">
+          <step>Show confirmation dialog</step>
+          <step>On confirm: Firebase Auth signOut(), navigate to /login</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <provider>AuthProvider, UserProvider</provider>
+        <state>User user</state>
+        <state>String currentTheme ("Terang" | "Gelap" | "Ikuti Sistem")</state>
+      </state_management>
+
+      <transitions>
+        <transition to="/ingredient-history" trigger="history_tile" type="push" />
+        <transition to="/login" condition="logout_confirmed" type="pushReplacement" />
+      </transitions>
+    </screen>
+
+    <!-- ====================================================================
+         INGREDIENT HISTORY
+         ==================================================================== -->
+    <screen id="ingredient_history" route="/ingredient-history">
+      <name>Ingredient History</name>
+      <description>List of all ingredients user has ever added</description>
+      
+      <components>
+        <component type="AppBar">
+          <property>title: "Riwayat Bahan"</property>
+          <property>leading: BackButton</property>
+          <property>actions: [
+            IconButton(icon: Icons.delete_sweep, onPressed: () => _showDeleteAllConfirmation())
+          ]</property>
+        </component>
+
+        <component type="Body">
+          <component type="Padding">
+            <property>padding: 16px horizontal, 8px vertical</property>
+            <component type="SearchBar">
+              <property>hintText: "Cari bahan..."</property>
+              <property>onChanged: (query) => _filterIngredients(query)</property>
+            </component>
+          </component>
+
+          <component type="EmptyState" condition="ingredients.isEmpty">
+            <property>icon: Icons.inventory_2_outlined</property>
+            <property>title: "Belum Ada Riwayat"</property>
+            <property>subtitle: "Bahan yang pernah kamu input akan muncul di sini"</property>
+          </component>
+
+          <component type="ListView.builder" condition="ingredients.isNotEmpty">
+            <property>itemCount: filteredIngredients.length</property>
+            <property>itemBuilder: (context, index) => Dismissible(
+              key: ValueKey(filteredIngredients[index].id),
+              direction: DismissDirection.endToStart,
+              onDismissed: (direction) => _deleteIngredient(filteredIngredients[index]),
+              background: Container(color: Colors.red, child: Icon(Icons.delete)),
+              child: ListTile(
+                leading: CircleAvatar(child: Icon(Icons.restaurant)),
+                title: Text(filteredIngredients[index].name),
+                subtitle: Text(filteredIngredients[index].category),
+                trailing: Column(
+                  mainAxisAlignment: center,
+                  Text("${filteredIngredients[index].useCount}x", style: headline6),
+                  Text("Digunakan", style: caption)
+                )
+              )
+            )</property>
+          </component>
+        </component>
+      </components>
+
+      <business_logic>
+        <function name="_filterIngredients">
+          <step>Filter ingredients by name (case-insensitive, partial match)</step>
+          <step>Update filteredIngredients list</step>
+        </function>
+
+        <function name="_deleteIngredient">
+          <step>1. Remove from Hive and Firestore</step>
+          <step>2. Update list</step>
+          <step>3. Show SnackBar with undo option (3s)</step>
+        </function>
+
+        <function name="_showDeleteAllConfirmation">
+          <step>Show dialog: "Hapus semua riwayat?"</step>
+          <step>On confirm: clear all ingredient history from Hive and Firestore</step>
+        </function>
+      </business_logic>
+
+      <state_management>
+        <provider>IngredientHistoryProvider</provider>
+        <state>List&lt;IngredientHistory&gt; ingredients (sorted by useCount desc)</state>
+        <state>List&lt;IngredientHistory&gt; filteredIngredients</state>
+      </state_management>
+
+      <data_flow>
+        <read>Hive ingredient_cache_box</read>
+        <write>Hive and Firestore (on delete)</write>
+      </data_flow>
+
+      <acceptance_criteria>
+        <criteria>Display all ingredients sorted by useCount descending</criteria>
+        <criteria>Search filters by name</criteria>
+        <criteria>Swipe to delete individual items</criteria>
+        <criteria>Delete all button with confirmation</criteria>
+        <criteria>Show useCount and lastUsed date</criteria>
+      </acceptance_criteria>
+    </screen>
+
+  </screens>
+
+  <!-- ========================================================================
+       BACKGROUND SERVICES & AUTOMATED PROCESSES
+       ======================================================================== -->
+  <background_services>
+    <service name="DailyArchiveScheduler">
+      <description>Automatically archive today's note at midnight</description>
+      <trigger>
+        <type>time_based</type>
+        <schedule>00:00 device local time</schedule>
+        <fallback>On app startup if date has changed</fallback>
+      </trigger>
+      <implementation>
+        <location>lib/services/archive_scheduler.dart</location>
+        <function name="checkAndArchiveIfNeeded">
+          <step>1. Get today_note from Hive</step>
+          <step>2. Compare today_note.date with current date</step>
+          <step>3. If different:
+            a. Create ArchivedNote from TodayNote
+            b. Calculate completionRate
+            c. Save to Firestore users/{userId}/notes/
+            d. Update Hive archived_notes_box
+            e. Clear today_note from Hive
+            f. Initialize new empty TodayNote for today
+          </step>
+        </function>
+      </implementation>
+      <invocation>
+        <on>App startup (main.dart)</on>
+        <on>Scheduled background task (WorkManager for Android)</on>
+      </invocation>
+    </service>
+
+    <service name="OfflineSyncService">
+      <description>Sync local Hive data with Firestore when online</description>
+      <trigger>
+        <type>connectivity_change</type>
+        <event>Offline to Online transition</event>
+      </trigger>
+      <implementation>
+        <location>lib/services/sync_service.dart</location>
+        <function name="syncToFirestore">
+          <step>1. Detect connectivity change via connectivity_plus</step>
+          <step>2. If now online:
+            a. Sync today_note to Firestore
+            b. Sync ingredient_history updates
+            c. Fetch any remote changes (conflict resolution: last-write-wins)
+            d. Update Hive cache with merged data
+          </step>
+        </function>
+      </implementation>
+    </service>
+
+    <service name="CacheManagementService">
+      <description>Manage offline cache sizes and cleanup</description>
+      <trigger>
+        <type>periodic</type>
+        <schedule>Daily or on low storage event</schedule>
+      </trigger>
+      <implementation>
+        <function name="cleanupCache">
+          <step>1. Check Hive box sizes</step>
+          <step>2. If cached_recipes_box > 50 items: remove oldest</step>
+          <step>3. If archived_notes_box > 30 items: remove oldest</step>
+          <step>4. Optimize Hive compact()</step>
+        </function>
+      </implementation>
+    </service>
+  </background_services>
+
+  <!-- ========================================================================
+       KEY USER FLOWS (End-to-End)
+       ======================================================================== -->
+  <user_flows>
+    <flow name="AI Link to Grocery Notes (Happy Path)">
+      <description>User extracts ingredients from YouTube/blog recipe</description>
+      <steps>
+        <step>1. User on Today screen, taps FAB</step>
+        <step>2. Bottom sheet appears with "Dari Link (AI)"</step>
+        <step>3. User selects "Dari Link (AI)" → navigate to /add-link</step>
+        <step>4. User pastes recipe URL in TextField</step>
+        <step>5. App validates URL format (enable button)</step>
+        <step>6. User taps "Ekstrak Bahan" button</step>
+        <step>7. Loading indicator shows (≤8 seconds)</step>
+        <step>8. Cloud Function receives request:
+          a. If YouTube: fetch transcript via YouTube Data API
+          b. If blog: scrape HTML content
+          c. Send content to Gemini API with prompt
+          d. Parse Gemini JSON response into List&lt;GroceryItem&gt;
+        </step>
+        <step>9. Success response with ingredients list</step>
+        <step>10. Navigate to /review-ai with data</step>
+        <step>11. User reviews list, optionally edits items</step>
+        <step>12. User taps "Simpan ke Today's Notes"</step>
+        <step>13. Items added to today_note in Hive</step>
+        <step>14. Sync to Firestore if online</step>
+        <step>15. Success SnackBar shown</step>
+        <step>16. Navigate back to /main/today</step>
+        <step>17. New items appear in Today's list</step>
+      </steps>
+    </flow>
+
+    <flow name="Manual Grocery Item with Search">
+      <description>User manually adds ingredient using history search</description>
+      <steps>
+        <step>1. User on Today screen, taps FAB</step>
+        <step>2. Selects "Input Manual" → navigate to /add-manual</step>
+        <step>3. User types "bawang" in search bar</step>
+        <step>4. App queries Hive ingredient_cache_box (≤300ms)</step>
+        <step>5. Results show: "Bawang Putih" (10x), "Bawang Merah" (8x)</step>
+        <step>6. User taps "Bawang Putih"</step>
+        <step>7. Form auto-fills with name, category, default quantity=1</step>
+        <step>8. User edits quantity to 5, selects unit "siung"</step>
+        <step>9. User taps "Simpan ke Today"</step>
+        <step>10. Item added to today_note in Hive</step>
+        <step>11. Ingredient history updated (useCount++, lastUsed=now)</step>
+        <step>12. Sync to Firestore if online</step>
+        <step>13. Navigate back to /main/today</step>
+        <step>14. New item appears in list</step>
+      </steps>
+    </flow>
+
+    <flow name="Recipe Discovery to Grocery Notes">
+      <description>User finds recipe in Discover and creates notes</description>
+      <steps>
+        <step>1. User on Discover tab</step>
+        <step>2. User searches "ayam" or selects "Ayam &amp; Unggas" filter</step>
+        <step>3. Recipes load from API (≤500ms)</step>
+        <step>4. User taps recipe card → navigate to /recipe-detail/:id</step>
+        <step>5. Recipe detail loads with ingredients and steps</step>
+        <step>6. User taps "Buat Notes dari Resep Ini"</step>
+        <step>7. Loading dialog shows</step>
+        <step>8. Cloud Function or local parser extracts ingredients</step>
+        <step>9. Navigate to /review-ai with ingredients</step>
+        <step>10. User reviews and saves to Today</step>
+        <step>11. Navigate back to /main/today</step>
+        <step>12. Recipe ingredients appear in Today's list</step>
+      </steps>
+    </flow>
+
+    <flow name="Daily Archive at Midnight">
+      <description>Automatic archiving of today's note at midnight</description>
+      <steps>
+        <step>1. Clock strikes 00:00 on device</step>
+        <step>2. Background service or app startup triggers checkAndArchiveIfNeeded()</step>
+        <step>3. Service reads today_note from Hive</step>
+        <step>4. Service checks: today_note.date != current_date</step>
+        <step>5. Service creates ArchivedNote:
+          - Copy all fields from TodayNote
+          - Set status = "archived"
+          - Calculate completionRate = checkedCount / totalCount
+          - Set archivedAt = yesterday's end-of-day
+        </step>
+        <step>6. Service saves ArchivedNote to Firestore users/{userId}/notes/{noteId}</step>
+        <step>7. Service adds to Hive archived_notes_box (keep last 30)</step>
+        <step>8. Service clears today_note from Hive</step>
+        <step>9. Service creates new empty TodayNote with current date</step>
+        <step>10. Next time user opens app, Today screen is clean</step>
+        <step>11. Archived note visible in My Notes tab</step>
+      </steps>
+    </flow>
+
+    <flow name="Reuse Archive">
+      <description>User copies items from old note to today</description>
+      <steps>
+        <step>1. User on Today screen, taps FAB</step>
+        <step>2. Selects "Reuse dari Arsip" → navigate to /select-archive</step>
+        <step>3. List of archived notes shown (newest first)</step>
+        <step>4. User taps archive card from 3 days ago</step>
+        <step>5. Confirmation dialog: "Reuse Notes Ini?"</step>
+        <step>6. User confirms "Ya, Reuse"</step>
+        <step>7. Service reads ArchivedNote from Hive/Firestore</step>
+        <step>8. Service creates copies of all items (reset isChecked=false)</step>
+        <step>9. Service adds copies to today_note.items in Hive</step>
+        <step>10. Sync to Firestore if online</step>
+        <step>11. Success SnackBar shown</step>
+        <step>12. Navigate back to /main/today</step>
+        <step>13. Reused items appear in Today's list</step>
+      </steps>
+    </flow>
+
+    <flow name="Offline Shopping Experience">
+      <description>User shops with app offline, syncs when back online</description>
+      <steps>
+        <step>1. User opens app at home (online), reviews Today's list</step>
+        <step>2. User goes to supermarket (no internet)</step>
+        <step>3. App detects offline, shows banner "Mode Offline"</step>
+        <step>4. User can still view Today's list (loaded from Hive)</step>
+        <step>5. User checks items as purchased (haptic feedback)</step>
+        <step>6. Changes saved to Hive immediately</step>
+        <step>7. User returns home, connects to WiFi</step>
+        <step>8. Sync service detects online transition</step>
+        <step>9. Service syncs today_note changes to Firestore</step>
+        <step>10. Offline banner disappears</step>
+        <step>11. Data now consistent across devices (if multi-device future)</step>
+      </steps>
+    </flow>
+  </user_flows>
+
+  <!-- ========================================================================
+       TECHNICAL IMPLEMENTATION NOTES
+       ======================================================================== -->
+  <implementation_notes>
+    <note category="State Management">
+      <title>Riverpod Providers Structure</title>
+      <content>
+        Use StateNotifier for mutable state (TodayNote, RecipesList).
+        Use FutureProvider for async data fetching (Firestore queries, API calls).
+        Use StreamProvider for real-time listeners (Firestore today_note).
+        Create provider file per feature: today_provider.dart, recipes_provider.dart, etc.
+      </content>
+    </note>
+
+    <note category="Offline First">
+      <title>Hive as Source of Truth</title>
+      <content>
+        ALL read operations should check Hive first, then Firestore if cache miss.
+        ALL write operations should write to Hive immediately, then Firestore async.
+        Use Firestore onSnapshot listeners only for critical real-time data (today_note).
+        Implement proper error handling for Firestore failures (don't break app if offline).
+      </content>
+    </note>
+
+    <note category="Cloud Functions">
+      <title>AI Extraction Cloud Function Architecture</title>
+      <content>
+        Create Firebase Cloud Function: extractIngredientsFromUrl(url, userId).
+        Function should:
+        1. Validate URL and user authentication
+        2. Check Firestore for user's daily API quota (limit 10 requests/day)
+        3. Route to appropriate extractor (YouTube API or web scraper)
+        4. Send extracted content to Gemini API with structured prompt
+        5. Parse Gemini response (expected JSON format)
+        6. Return formatted List&lt;GroceryItem&gt; or error
+        7. Log all requests for debugging and quota tracking
+        
+        Gemini Prompt Template:
+        "Extract all ingredients from this recipe content. Return ONLY a JSON array of objects with fields: name (string), quantity (number), unit (string), category (string from: Sayuran, Buah, Daging &amp; Seafood, etc.). If no quantity specified, use 1. Example: [{\"name\": \"Bawang Putih\", \"quantity\": 2, \"unit\": \"siung\", \"category\": \"Bumbu &amp; Rempah\"}]"
+      </content>
+    </note>
+
+    <note category="Archive Scheduler">
+      <title>Implementing Daily Auto-Archive</title>
+      <content>
+        Use WorkManager (Android) to schedule daily background task at 00:00.
+        Register periodic work in main.dart after initialization.
+        Implement checkAndArchiveIfNeeded() in ArchiveSchedulerService.
+        ALSO call checkAndArchiveIfNeeded() on every app startup (failsafe).
+        Store last archive check timestamp in Hive to prevent multiple archives.
+      </content>
+    </note>
+
+    <note category="Performance">
+      <title>Optimization Checklist</title>
+      <content>
+        - Use cached_network_image for all network images with placeholder
+        - Implement pagination for My Notes (load 20 at a time)
+        - Use ListView.builder (not ListView) for dynamic lists
+        - Debounce search inputs (300ms for ingredient search, 500ms for recipe search)
+        - Lazy load recipe details (don't fetch until user navigates to detail)
+        - Index Hive boxes by frequently queried fields (ingredient name, date)
+        - Use Firestore composite indexes for complex queries
+      </content>
+    </note>
+
+    <note category="Error Handling">
+      <title>Error Handling Strategy</title>
+      <content>
+        Create centralized error handler: lib/utils/error_handler.dart
+        Catch all exceptions in try-catch blocks at provider level
+        Show user-friendly SnackBar or Dialog for errors (no stack traces shown)
+        Log errors to Firebase Crashlytics with context (user ID, action, timestamp)
+        Network errors: show "No internet" banner, queue actions for retry
+        AI errors: provide fallback options (manual input, try different link)
+      </content>
+    </note>
+
+    <note category="Testing">
+      <title>Testing Requirements (Phase 3)</title>
+      <content>
+        Unit tests:
+        - GroceryItem model serialization/deserialization
+        - Ingredient search algorithm
+        - Archive logic (date comparison, completion rate calculation)
+        
+        Widget tests:
+        - TodayScreen empty state and item list
+        - AddManualScreen form validation
+        - RecipeCard rendering
+        
+        Integration tests:
+        - Complete AI extraction flow (mock Cloud Function)
+        - Offline to online sync
+        - Daily archive trigger
+        
+        Manual tests:
+        - Test on physical device (minimum Android API 30)
+        - Test offline mode completely (airplane mode)
+        - Test archive at midnight (change device date/time)
+        - Test AI extraction with 20+ diverse recipe links
+      </content>
+    </note>
+
+    <note category="Security">
+      <title>Security Best Practices</title>
+      <content>
+        - Store API keys (Gemini, YouTube) in Cloud Functions env vars, NEVER in client
+        - Implement Firestore security rules: allow read/write only if auth.uid == userId
+        - Rate limit Cloud Functions: max 10 AI requests per user per day
+        - Validate all user inputs on both client and server
+        - Use HTTPS only for all API calls
+        - Sanitize URLs before passing to scraper (prevent injection attacks)
+      </content>
+    </note>
+
+    <note category="Localization">
+      <title>Indonesian Language Implementation</title>
+      <content>
+        All UI text in Bahasa Indonesia (primary).
+        Error messages in Indonesian with clear actionable guidance.
+        Date formatting: Use intl package with 'id_ID' locale.
+        Example: DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(date)
+        Currency (future): Rupiah (Rp) format with thousand separators.
+        Future consideration: Add English translation for v2.0.
+      </content>
+    </note>
+  </implementation_notes>
+
+  <!-- ========================================================================
+       DEFINITION OF DONE
+       ======================================================================== -->
+  <definition_of_done>
+    <criteria_list>
+      <criteria>Functionality matches all Acceptance Criteria in PRD</criteria>
+      <criteria>Error states handled gracefully (no uncaught exceptions)</criteria>
+      <criteria>Empty states implemented with illustrations and helpful text</criteria>
+      <criteria>Works offline for core features (Today, My Notes)</criteria>
+      <criteria>Loading states use Shimmer skeleton or CircularProgressIndicator</criteria>
+      <criteria>Firebase Crashlytics shows 0 crashes for the feature</criteria>
+      <criteria>UI consistent with design system (colors, fonts, spacing)</criteria>
+      <criteria>Tested on minimum 1 physical Android device or emulator (API 30+)</criteria>
+      <criteria>Performance targets met (search ≤300ms, AI ≤8s, etc.)</criteria>
+      <criteria>Code reviewed by at least 1 other developer (self-review if solo)</criteria>
+      <criteria>No TODO or FIXME comments left in production code</criteria>
+      <criteria>Feature documented in README with screenshots</criteria>
+    </criteria_list>
+  </definition_of_done>
+
+  <!-- ========================================================================
+       DEPLOYMENT CHECKLIST
+       ======================================================================== -->
+  <deployment_checklist>
+    <item>Update version in pubspec.yaml to 1.0.0</item>
+    <item>Update versionCode in android/app/build.gradle</item>
+    <item>Generate app signing key (release keystore)</item>
+    <item>Configure Firebase for production environment</item>
+    <item>Deploy Cloud Functions to production</item>
+    <item>Enable Firestore security rules in production</item>
+    <item>Test APK on multiple Android devices (different screen sizes)</item>
+    <item>Verify all API keys are in Cloud Functions env vars (not in code)</item>
+    <item>Run flutter build apk --release</item>
+    <item>Test release APK thoroughly (offline, online, all flows)</item>
+    <item>Create GitHub release with APK and screenshots</item>
+    <item>Update README with installation instructions</item>
+    <item>Optional: Prepare for Google Play Store submission (future)</item>
+  </deployment_checklist>
+
+</app>
