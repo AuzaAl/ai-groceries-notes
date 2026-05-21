@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1061513738696",
+    "project_id": "ai-groceries-notes-f1777",
+    "storage_bucket": "ai-groceries-notes-f1777.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061513738696:android:f859f2a0df2933c93ce8fd",
+        "android_client_info": {
+          "package_name": "com.example.aigroceriesnotes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1061513738696-k0a0rs51c78dragouoi0chp79pb7b4g0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOjuOJ6H0-gfsI9XDwN3dWofq3n8btMaw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1061513738696-k0a0rs51c78dragouoi0chp79pb7b4g0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

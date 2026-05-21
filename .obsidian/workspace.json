@@ -1,0 +1,202 @@
+{
+  "main": {
+    "id": "4752d5e8f4a5044b",
+    "type": "split",
+    "children": [
+      {
+        "id": "1e5718a062f632ba",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "21173c3c1dd69df0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "ObsidianVault/todossetup.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "todossetup"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "98c4bcbb999cb583",
+    "type": "split",
+    "children": [
+      {
+        "id": "9f48c9703a75d7b5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5062da579d657245",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "b5d994b9639c4a41",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Penelusuran"
+            }
+          },
+          {
+            "id": "89118e2b0999138c",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Penanda"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "18d00d81ef838eb5",
+    "type": "split",
+    "children": [
+      {
+        "id": "d4fca6d1a75924eb",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c5314c865c45943a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "ObsidianVault/todossetup.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlink pada todossetup"
+            }
+          },
+          {
+            "id": "8133ecd0a4ec4911",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "ObsidianVault/todossetup.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Tautan keluar dari todossetup"
+            }
+          },
+          {
+            "id": "f0d405c552005574",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tag"
+            }
+          },
+          {
+            "id": "2d179da38bcc8be9",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Semua properti"
+            }
+          },
+          {
+            "id": "cad4d3b71b59f11a",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "ObsidianVault/todossetup.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Kerangka dari todossetup"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "21173c3c1dd69df0",
+  "lastOpenFiles": [
+    "android/app/google-services.json",
+    "api",
+    "firebase.json",
+    "firebase.json.tmp.13796.937a5c41c30d",
+    "functions/index.js",
+    "functions/index.js.tmp.13796.c52e087567a5",
+    "functions/package.json",
+    "functions/package.json.tmp.13796.763c5bbeee00",
+    "functions",
+    "ObsidianVault/todos.md",
+    "ObsidianVault/todossetup.md.tmp.13796.37010dfa1013",
+    "ObsidianVault/todossetup.md",
+    "ObsidianVault/todos.md.tmp.13796.c18750d0ac80"
+  ]
+}
