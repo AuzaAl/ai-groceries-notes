@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class GroceryItem {
   final String id;
   final String name;
@@ -44,6 +42,20 @@ class GroceryItem {
       isChecked: isChecked ?? this.isChecked,
       addedAt: addedAt ?? this.addedAt,
       source: source ?? this.source,
+    );
+  }
+
+  factory GroceryItem.fromJson(Map<String, dynamic> json) {
+    return GroceryItem(
+      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      name: json['name'] as String? ?? 'Unknown',
+      quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
+      unit: json['unit'] as String? ?? '',
+      category: json['category'] as String? ?? 'Uncategorized',
+      notes: json['notes'] as String?,
+      isChecked: json['isChecked'] as bool? ?? false,
+      addedAt: json['addedAt'] != null ? DateTime.parse(json['addedAt']) : DateTime.now(),
+      source: json['source'] as String? ?? 'ai',
     );
   }
 }
