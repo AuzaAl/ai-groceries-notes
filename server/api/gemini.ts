@@ -29,10 +29,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { prompt } = req.body;
+    let { prompt } = req.body;
+
+    // --- PLATFORM ROUTING LOGIC ---
+    const isUrl = /^(https?:\/\/)/i.test(prompt);
+
+    if (isUrl) {
+      // 1. YouTube Processor
+      const ytRegExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
+      const ytMatch = prompt.match(ytRegExp);
+
+      if (ytMatch && ytMatch[1]) {
+        const videoId = ytMatch[1];
+        const apiKey = process.env.YOUTUBE_API_KEY;
+
+        if (!apiKey) {
+          return res.status(500).json({ success: false, error: "YOUTUBE_API_KEY is not configured on the server." });
+        }
+
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+           return res.status(400).json({ success: false, error: `Gagal mengambil data dari YouTube API. Status: ${response.status}` });
+        }
+
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) {
+          return res.status(400).json({ success: false, error: 'Video YouTube tidak ditemukan atau di-set private.' });
+        }
+
+        const snippet = data.items[0].snippet;
+        const videoContent = `Title: ${snippet.title}\n\nDescription: ${snippet.description}`;
+
+        // Swap the URL prompt with the description
+        prompt = `Tolong ekstrak daftar belanjaan dari deskripsi video YouTube ini:\n\n${videoContent}`;
+      }
+      // 2. Future Platforms
+      else if (prompt.includes('tiktok.com') || prompt.includes('instagram.com')) {
+         return res.status(400).json({ success: false, error: 'Platform ini (TikTok/Instagram) belum didukung. Saat ini hanya mendukung link YouTube.' });
+      }
+      // 3. Unknown URL
+      else {
+         return res.status(400).json({ success: false, error: 'URL tidak dikenali. Silakan masukkan link YouTube yang valid atau teks resep.' });
+      }
+    }
+    // --- END PLATFORM ROUTING ---
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash-lite',
+      model:'gemini-3.1-flash-lite',
       systemInstruction: systemPrompt,
       generationConfig: {
         responseMimeType: "application/json",

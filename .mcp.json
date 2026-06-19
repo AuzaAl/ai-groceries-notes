@@ -6,6 +6,10 @@
       "env": {
         "OBSIDIAN_VAULT_PATH": "C:\\AuzaCode\\flutter\\aigroceriesnotes\\ObsidianVault"
       }
+    },
+    "figma-mcp-go": {
+      "command": "npx",
+      "args": ["-y", "@vkhanhqui/figma-mcp-go"]
     }
   }
 }

@@ -31,17 +31,22 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
     final groceryState = ref.watch(groceryListProvider);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF5F3F0),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFFF5F3F0),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF061B0E)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text(
           'GroceryNotes',
           style: TextStyle(
-            color: Colors.white,
+            color: Color(0xFF061B0E),
             fontSize: 24,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
+            fontFamily: 'PlusJakartaSans',
           ),
         ),
       ),
@@ -54,17 +59,17 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1C1C1E),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF2C2C2E)),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: TextField(
                       controller: _urlController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Color(0xFF061B0E)),
                       decoration: const InputDecoration(
                         hintText: 'Paste YouTube Link',
-                        hintStyle: TextStyle(color: Color(0xFF8E8E93)),
+                        hintStyle: TextStyle(color: Color(0xFF868889)),
                         border: InputBorder.none,
                       ),
                     ),
@@ -76,8 +81,8 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                     child: ElevatedButton(
                       onPressed: groceryState.isLoading ? null : _extractIngredients,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
+                        backgroundColor: const Color(0xFF4E6953),
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -88,6 +93,7 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          fontFamily: 'PlusJakartaSans',
                         ),
                       ),
                     ),
@@ -98,7 +104,7 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
             Expanded(
               child: groceryState.when(
                 loading: () => const Center(
-                  child: CupertinoActivityIndicator(color: Colors.white),
+                  child: CupertinoActivityIndicator(color: Color(0xFF4E6953)),
                 ),
                 error: (error, stack) => Center(
                   child: Padding(
@@ -115,7 +121,7 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                     return const Center(
                       child: Text(
                         'No ingredients extracted yet.',
-                        style: TextStyle(color: Color(0xFF8E8E93)),
+                        style: TextStyle(color: Color(0xFF868889)),
                       ),
                     );
                   }
@@ -127,9 +133,9 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                       final item = items[index];
                       return Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1C1C1E),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF2C2C2E)),
+                          border: Border.all(color: const Color(0xFFE5E5E5)),
                         ),
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -142,17 +148,19 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                                   Text(
                                     item.name,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: Color(0xFF061B0E),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
+                                      fontFamily: 'PlusJakartaSans',
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${item.quantity} ${item.unit}',
                                     style: const TextStyle(
-                                      color: Color(0xFFEBEBF5),
+                                      color: Color(0xFF434843),
                                       fontSize: 14,
+                                      fontFamily: 'PlusJakartaSans',
                                     ),
                                   ),
                                   if (item.notes != null && item.notes!.isNotEmpty) ...[
@@ -160,9 +168,10 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                                     Text(
                                       item.notes!,
                                       style: const TextStyle(
-                                        color: Color(0xFF8E8E93),
+                                        color: Color(0xFF868889),
                                         fontSize: 12,
                                         fontStyle: FontStyle.italic,
+                                        fontFamily: 'PlusJakartaSans',
                                       ),
                                     ),
                                   ],
@@ -173,15 +182,16 @@ class _GroceryNotesScreenState extends ConsumerState<GroceryNotesScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2C2C2E),
+                                color: const Color(0xFFEFEEEB),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 item.category,
                                 style: const TextStyle(
-                                  color: Color(0xFFEBEBF5),
+                                  color: Color(0xFF434843),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
+                                  fontFamily: 'PlusJakartaSans',
                                 ),
                               ),
                             ),

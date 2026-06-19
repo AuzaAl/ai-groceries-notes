@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/grocery_notes_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(
@@ -19,15 +19,18 @@ class MainApp extends StatelessWidget {
       title: 'GroceryNotes',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        fontFamily: 'Inter', // Default to a clean sans-serif if you have one, or standard system fonts
-        colorScheme: const ColorScheme.dark(
-          primary: Colors.white,
-          surface: Color(0xFF1C1C1E),
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF5F3F0),
+        fontFamily: 'PlusJakartaSans',
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF4E6953),
+          onPrimary: Colors.white,
+          secondary: Color(0xFF4A654F),
+          surface: Colors.white,
+          onSurface: Color(0xFF061B0E),
         ),
       ),
-      home: const GroceryNotesScreen(),
+      home: const SplashScreen(),
     );
   }
 }
