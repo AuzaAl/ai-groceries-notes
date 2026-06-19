@@ -12,16 +12,16 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2
-  flutter_dotenv: ^5.2.1
+  flutter_dotenv: ^6.0.1
   flutter_inappwebview: ^6.1.5
   flutter_riverpod: ^3.3.1
   go_router: ^17.2.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  firebase_core: ^3.11.0
-  firebase_auth: ^5.5.0
-  cloud_firestore: ^5.6.3
-  google_sign_in: ^6.2.2
+  firebase_core: ^4.11.0
+  firebase_auth: ^6.5.3
+  cloud_firestore: ^6.6.0
+  google_sign_in: ^7.2.0
   path_provider: ^2.1.5
   http: ^1.6.0
   riverpod_annotation: ^4.0.2
@@ -37,43 +37,43 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - lib/assets/images/mascot.png
+    - assets/images/tomato_notes.png
 
   fonts:
     - family: PlusJakartaSans
       fonts:
-        - asset: lib/assets/fonts/PlusJakartaSans-ExtraLight.ttf
+        - asset: assets/fonts/PlusJakartaSans-ExtraLight.ttf
           weight: 200
-        - asset: lib/assets/fonts/PlusJakartaSans-ExtraLightItalic.ttf
+        - asset: assets/fonts/PlusJakartaSans-ExtraLightItalic.ttf
           weight: 200
           style: italic
-        - asset: lib/assets/fonts/PlusJakartaSans-Light.ttf
+        - asset: assets/fonts/PlusJakartaSans-Light.ttf
           weight: 300
-        - asset: lib/assets/fonts/PlusJakartaSans-LightItalic.ttf
+        - asset: assets/fonts/PlusJakartaSans-LightItalic.ttf
           weight: 300
           style: italic
-        - asset: lib/assets/fonts/PlusJakartaSans-Regular.ttf
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
           weight: 400
-        - asset: lib/assets/fonts/PlusJakartaSans-Italic.ttf
+        - asset: assets/fonts/PlusJakartaSans-Italic.ttf
           weight: 400
           style: italic
-        - asset: lib/assets/fonts/PlusJakartaSans-Medium.ttf
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
           weight: 500
-        - asset: lib/assets/fonts/PlusJakartaSans-MediumItalic.ttf
+        - asset: assets/fonts/PlusJakartaSans-MediumItalic.ttf
           weight: 500
           style: italic
-        - asset: lib/assets/fonts/PlusJakartaSans-SemiBold.ttf
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
           weight: 600
-        - asset: lib/assets/fonts/PlusJakartaSans-SemiBoldItalic.ttf
+        - asset: assets/fonts/PlusJakartaSans-SemiBoldItalic.ttf
           weight: 600
           style: italic
-        - asset: lib/assets/fonts/PlusJakartaSans-Bold.ttf
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
           weight: 700
-        - asset: lib/assets/fonts/PlusJakartaSans-BoldItalic.ttf
+        - asset: assets/fonts/PlusJakartaSans-BoldItalic.ttf
           weight: 700
           style: italic
-        - asset: lib/assets/fonts/PlusJakartaSans-ExtraBold.ttf
+        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
           weight: 800
-        - asset: lib/assets/fonts/PlusJakartaSans-ExtraBoldItalic.ttf
+        - asset: assets/fonts/PlusJakartaSans-ExtraBoldItalic.ttf
           weight: 800
           style: italic

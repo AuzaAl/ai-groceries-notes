@@ -3,7 +3,12 @@
     "allow": [
       "Bash(flutter pub:*)",
       "Bash(flutter analyze:*)",
-      "Bash(dart run:*)"
+      "Bash(dart run:*)",
+      "Bash(rmdir \"D:/Coding-Project/groceries_app/lib/core\" /s /q)",
+      "Bash(rmdir \"D:/Coding-Project/groceries_app/lib/data\" /s /q)",
+      "Bash(rmdir \"D:/Coding-Project/groceries_app/lib/routes\" /s /q)",
+      "Bash(rmdir \"D:/Coding-Project/groceries_app/lib/assets\" /s /q)",
+      "Bash(rmdir \"D:/Coding-Project/groceries_app/lib/functions\" /s /q)"
     ]
   }
 }
