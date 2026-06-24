@@ -4,7 +4,7 @@ import '../models/grocery_item.dart';
 
 class GroceryApiService {
   // Local endpoint as requested. Note: Android emulator might need 10.0.2.2 instead of localhost.
-  static const String baseUrl = 'http://localhost:3000/api/gemini';
+  static const String baseUrl = 'http://10.0.2.2:3000/api/gemini';
 
   Future<List<GroceryItem>> extractIngredients(String url) async {
     try {

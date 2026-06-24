@@ -75,7 +75,7 @@ This Skill is not needed in the following situations:
 - `skip-links` - Skip to main content for keyboard users
 - `heading-hierarchy` - Sequential h1→h6, no level skip
 - `color-not-only` - Don't convey info by color alone (add icon/text)
-- `dynamic-type` - Support system text scaling; avoid truncation as text grows (Apple Dynamic Type, MD)
+- `dynamic-type` - Support system text scaling; avoid truncation as text grows (Apple Dynam ic Type, MD)
 - `reduced-motion` - Respect prefers-reduced-motion; reduce/disable animations when requested (Apple Reduced Motion API, MD)
 - `voiceover-sr` - Meaningful accessibilityLabel/accessibilityHint; logical reading order for VoiceOver/screen readers (Apple HIG, MD)
 - `escape-routes` - Provide cancel/back in modals and multi-step flows (Apple HIG)

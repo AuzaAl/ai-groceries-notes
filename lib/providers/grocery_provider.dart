@@ -25,3 +25,38 @@ class GroceryList extends _$GroceryList {
     }
   }
 }
+
+class DebugExtractedItemsNotifier extends Notifier<List<GroceryItem>> {
+  @override
+  List<GroceryItem> build() => [];
+
+  void setItems(List<GroceryItem> items) => state = items;
+  void clear() => state = [];
+}
+
+final debugExtractedItemsProvider = NotifierProvider<DebugExtractedItemsNotifier, List<GroceryItem>>(
+  DebugExtractedItemsNotifier.new,
+);
+
+class DebugErrorNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setError(String? error) => state = error;
+  void clear() => state = null;
+}
+
+final debugErrorProvider = NotifierProvider<DebugErrorNotifier, String?>(
+  DebugErrorNotifier.new,
+);
+
+class DebugLoadingNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setLoading(bool loading) => state = loading;
+}
+
+final debugLoadingProvider = NotifierProvider<DebugLoadingNotifier, bool>(
+  DebugLoadingNotifier.new,
+);
