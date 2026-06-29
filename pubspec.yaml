@@ -1,6 +1,6 @@
 name: aigroceriesnotes
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
@@ -39,14 +39,17 @@ flutter:
   assets:
     - .env
     - assets/images/tomato_notes.png
-    - assets/icons/Logo.svg
     - assets/images/AiNotes_Button.png
+    - assets/images/svgpattern.png
+    # icons
     - assets/icons/Youtube_Icon.svg
     - assets/icons/Tiktok_Icon.svg
     - assets/icons/Instagram_Icon.svg
-    - assets/icons/Blackstar_Icon.svg
-    - assets/images/WhiteStar_Icon.svg
-    - assets/images/svgpattern.png
+    - assets/icons/paper.svg
+    - assets/icons/Profile.svg
+    - assets/icons/StarIcon.svg
+    - assets/icons/shopping-basket.svg
+    - assets/icons/home.svg
 
   fonts:
     - family: PlusJakartaSans

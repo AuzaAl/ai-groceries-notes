@@ -20,6 +20,7 @@ Output harus berupa raw JSON array murni tanpa format markdown, berisi objek den
 - "unit" (string): Pilih HANYA dari [gram, kg, ml, liter, sdm, sdt, buah, ikat, bungkus, botol, kaleng, lembar, siung, batang, ekor, porsi]. Konversi takaran tidak baku atau gunakan "secukupnya".
 - "category" (string): Klasifikasikan ke salah satu dari [Sayuran, Buah, Daging & Seafood, Bumbu & Rempah, Susu & Olahan, Karbohidrat & Biji-bijian, Minuman, Frozen Food, Snack, Lainnya].
 - "notes" (string): Keterangan kondisi fisik bahan (contoh: "cincang kasar", "cair"). Kosongkan jika tidak ada atau jika isinya tidak relevan.
+- "ingredientKey" (string): Nama bahan dalam bahasa Inggris, huruf kecil semua, gunakan underscore untuk spasi. Harus cocok dengan format nama bahan TheMealDB. Contoh: "chicken", "olive_oil", "garlic", "broccoli", "beef", "tomato", "onion", "egg", "milk", "flour", "sugar", "salt", "butter", "rice", "potato", "carrot", "spinach", "corn", "shrimp", "tofu". Isi string kosong ("") jika tidak tahu padanan Inggrisnya.
 
 Jika teks sama sekali tidak mengandung komposisi bahan resep makanan, kembalikan sebuah JSON object: {"error": "no_recipe_detected"}`;
 

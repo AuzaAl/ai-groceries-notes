@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/orb_background.dart';
 import '../../providers/grocery_provider.dart';
 import '../../services/grocery_api_service.dart';
 import '../groceries/screens/grocery_notes_screen.dart';
@@ -51,7 +54,7 @@ class _LoadingScreenState extends State<LoadingScreen>
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _entryController, curve: Curves.easeOut));
-    _entryScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+    _entryScale = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic),
     );
 
@@ -158,37 +161,57 @@ class _LoadingScreenState extends State<LoadingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: AnimatedBuilder(
-        animation: _entryController,
-        builder: (context, child) {
-          return Opacity(
-            opacity: _entryFade.value,
-            child: Transform.scale(scale: _entryScale.value, child: child),
-          );
-        },
-        child: Stack(
-          children: [
-            // Decorative sparkle pattern background
-            _buildSparklePattern(),
-
-            // Main content
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Animated star icon
-                  _buildStarIcon(),
-                  const SizedBox(height: 20),
-                  // Generating text with animated dots
-                  _buildGeneratingText(),
-                ],
+      backgroundColor: bgBase,
+      body: OrbBackground(
+        child: AnimatedBuilder(
+          animation: _entryController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _entryFade.value,
+              child: Transform.scale(scale: _entryScale.value, child: child),
+            );
+          },
+          child: Stack(
+            children: [
+              // Main content
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Animated star icon
+                      _buildStarIcon(),
+                      const SizedBox(height: 15),
+                      // Title text
+                      Text(
+                        'Sedang Membaca Resep',
+                        style: AppTextStyles.displayMedium.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: ink900,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 15),
+                      // Subtitle text
+                      Text(
+                        'Tunggu sebentar, jangan tutup aplikasi$_dots',
+                        style: AppTextStyles.bodyL.copyWith(
+                          fontSize: 14,
+                          color: ink500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
 
-            // Error state
-            if (_error != null) _buildErrorState(),
-          ],
+              // Error state
+              if (_error != null) _buildErrorState(),
+            ],
+          ),
         ),
       ),
     );
@@ -210,44 +233,25 @@ class _LoadingScreenState extends State<LoadingScreen>
             scale: scale,
             child: Opacity(
               opacity: opacity,
-              child: SvgPicture.asset(
-                'assets/images/WhiteStar_Icon.svg',
-                width: 80,
-                height: 80,
+              child: ShaderMask(
+                shaderCallback: (Rect bounds) {
+                  return const LinearGradient(
+                    colors: [orbPrimary, orbSecondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds);
+                },
+                blendMode: BlendMode.srcIn,
+                child: SvgPicture.asset(
+                  'assets/icons/StarIcon.svg',
+                  width: 116,
+                  height: 116,
+                ),
               ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildGeneratingText() {
-    return Text(
-      'Generating your notes$_dots',
-      style: const TextStyle(
-        color: Color(0xFF7B7B7B),
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        fontFamily: 'PlusJakartaSans',
-      ),
-    );
-  }
-
-  Widget _buildSparklePattern() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 120),
-        child: Opacity(
-          opacity: 0.15,
-          child: Image.asset(
-            'assets/images/svgpattern.png',
-            fit: BoxFit.fitWidth,
-            width: double.infinity,
-          ),
-        ),
-      ),
     );
   }
 
@@ -259,40 +263,43 @@ class _LoadingScreenState extends State<LoadingScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF2C2C2E),
-          borderRadius: BorderRadius.circular(12),
+          color: bgSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ink100),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2E7D52).withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'Error: $_error',
-              style: const TextStyle(
-                color: Color(0xFFFF6B6B),
-                fontSize: 13,
-                fontFamily: 'PlusJakartaSans',
+              style: AppTextStyles.bodyM.copyWith(
+                color: error,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             GestureDetector(
               onTap: _goBack,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
-                  vertical: 10,
+                  vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  color: green500,
+                  borderRadius: BorderRadius.circular(28),
                 ),
-                child: const Text(
-                  'Go Back',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'PlusJakartaSans',
+                child: Text(
+                  'Kembali',
+                  style: AppTextStyles.headingS.copyWith(
+                    color: Colors.white,
                   ),
                 ),
               ),

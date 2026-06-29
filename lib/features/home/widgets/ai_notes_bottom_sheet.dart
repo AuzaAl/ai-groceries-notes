@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 
 class AiNotesBottomSheet extends StatefulWidget {
   const AiNotesBottomSheet({super.key});
@@ -54,18 +56,18 @@ class _AiNotesBottomSheetState extends State<AiNotesBottomSheet> {
           maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF232326), Color(0x0D0D0D0D)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          color: bgElevated,
           border: Border(
-            top: BorderSide(
-              color: Colors.white.withValues(alpha: 0.15), // fully transparent
-              width: 1,
-            ),
+            top: BorderSide(color: ink100, width: 1),
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1F0D1412),
+              blurRadius: 40,
+              offset: Offset(0, -4),
+            ),
+          ],
         ),
         child: SingleChildScrollView(
           child: Padding(
@@ -96,7 +98,7 @@ class _AiNotesBottomSheetState extends State<AiNotesBottomSheet> {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ink300,
           borderRadius: BorderRadius.circular(3),
         ),
       ),
@@ -138,33 +140,26 @@ class _AiNotesBottomSheetState extends State<AiNotesBottomSheet> {
   Widget _buildUrlInputField() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ink300, width: 1.5),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const Text(
-            '🔗',
-            style: TextStyle(fontSize: 16),
+          const Icon(
+            Icons.link,
+            size: 20,
+            color: ink500,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _urlController,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 14,
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Paste a recipe, grocery haul, or content URL…',
-                hintStyle: TextStyle(
-                  color: Color(0xFF8E8E93),
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
+              style: AppTextStyles.bodyL.copyWith(color: ink900),
+              decoration: InputDecoration(
+                hintText: 'Paste a recipe, grocery haul, or content URL...',
+                hintStyle: AppTextStyles.bodyL.copyWith(color: ink500),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
               ),
@@ -182,32 +177,21 @@ class _AiNotesBottomSheetState extends State<AiNotesBottomSheet> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E),
+        color: bgSurface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'How AI Works',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'PlusJakartaSans',
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTextStyles.headingS.copyWith(color: ink900),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'AI analyzes your content and automatically extracts ingredients, grocery items, quantities, and shopping essentials into organized grocery notes.',
-            style: TextStyle(
-              color: Color(0xFF8E8E93),
-              fontFamily: 'PlusJakartaSans',
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-            ),
+            style: AppTextStyles.bodyS.copyWith(color: ink500, height: 1.5),
           ),
         ],
       ),
@@ -219,15 +203,16 @@ class _AiNotesBottomSheetState extends State<AiNotesBottomSheet> {
       onTap: _onGenerate,
       child: Container(
         width: double.infinity,
+        height: 52,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: green500,
+          borderRadius: BorderRadius.circular(28),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         child: Center(
           child: SvgPicture.asset(
-            'assets/icons/Blackstar_Icon.svg',
-            height: 32,
+            'assets/icons/StarIcon.svg',
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
           ),
         ),
       ),
@@ -257,13 +242,12 @@ class _SourceButton extends StatelessWidget {
         width: 84,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF3A3A3C)
-              : const Color(0xFF2C2C2E),
+          color: isSelected ? green50 : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected
-              ? Border.all(color: const Color(0xFF4E6953), width: 1.5)
-              : null,
+          border: Border.all(
+            color: isSelected ? green500 : ink300,
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -275,18 +259,16 @@ class _SourceButton extends StatelessWidget {
                 height: 22,
               )
             else
-              const Text(
-                '🔗',
-                style: TextStyle(fontSize: 20),
+              const Icon(
+                Icons.link,
+                size: 22,
               ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AppTextStyles.labelS.copyWith(
+                color: isSelected ? green500 : ink500,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],

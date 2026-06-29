@@ -32,6 +32,29 @@ class DebugExtractedItemsNotifier extends Notifier<List<GroceryItem>> {
 
   void setItems(List<GroceryItem> items) => state = items;
   void clear() => state = [];
+
+  void removeAt(int index) {
+    final newList = List<GroceryItem>.from(state);
+    newList.removeAt(index);
+    state = newList;
+  }
+
+  void toggleChecked(int index) {
+    final newList = List<GroceryItem>.from(state);
+    final item = newList[index];
+    newList[index] = item.copyWith(isChecked: !item.isChecked);
+    state = newList;
+  }
+
+  void addItem(GroceryItem item) {
+    state = [...state, item];
+  }
+
+  void insertAt(int index, GroceryItem item) {
+    final newList = List<GroceryItem>.from(state);
+    newList.insert(index, item);
+    state = newList;
+  }
 }
 
 final debugExtractedItemsProvider = NotifierProvider<DebugExtractedItemsNotifier, List<GroceryItem>>(

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../models/grocery_item.dart';
 import '../../providers/grocery_provider.dart';
-import '../loading/loading_screen.dart';
-import 'widgets/ai_notes_bottom_sheet.dart';
+import '../../core/widgets/top_app_bar.dart';
+import '../../core/widgets/bottom_app_bar.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -22,10 +20,14 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           children: [
             const SizedBox(height: 15),
-            const _TopAppBar(),
+            const TopAppBar(
+              title: '',
+              showBackButton: false,
+              showLogo: true,
+            ),
             const SizedBox(height: 20),
             Expanded(child: _buildDebugPanel(items, error, isLoading)),
-            const _BottomAppBar(),
+            const GroceryBottomAppBar(),
           ],
         ),
       ),
@@ -181,113 +183,4 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _TopAppBar extends StatelessWidget {
-  const _TopAppBar();
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 60,
-      child: Center(
-        child: SvgPicture.asset('assets/icons/Logo.svg', height: 70),
-      ),
-    );
-  }
-}
-
-class _BottomAppBar extends StatelessWidget {
-  const _BottomAppBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 70,
-      color: const Color(0x304B4B4B),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _iconContainer(20, 0),
-              _iconContainer(10, 10),
-              const _CenterButton(),
-              _iconContainer(10, 10),
-              _iconContainer(20, 0),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _iconContainer(double topPadding, double bottomPadding) {
-    return Container(
-      width: 66.8,
-      height: 70,
-      padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-      color: const Color(0x304B4B4B),
-    );
-  }
-}
-
-class _CenterButton extends ConsumerStatefulWidget {
-  const _CenterButton();
-
-  @override
-  ConsumerState<_CenterButton> createState() => _CenterButtonState();
-}
-
-class _CenterButtonState extends ConsumerState<_CenterButton> {
-  bool _isPressed = false;
-
-  void _onTapDown(TapDownDetails _) {
-    setState(() => _isPressed = true);
-  }
-
-  void _onTapUp(TapUpDetails _) {
-    setState(() => _isPressed = false);
-  }
-
-  void _onTapCancel() {
-    setState(() => _isPressed = false);
-  }
-
-  Future<void> _onTap() async {
-    HapticFeedback.lightImpact();
-    final url = await AiNotesBottomSheet.show(context);
-    if (url != null && url.isNotEmpty && mounted) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => LoadingScreen(url: url)));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      onTap: _onTap,
-      child: Container(
-        width: 75,
-        height: 75,
-        padding: const EdgeInsets.all(10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-          child: Center(
-            child: Image.asset(
-              'assets/images/AiNotes_Button.png',
-              width: 80,
-              height: 80,
-              color: _isPressed ? Colors.black.withValues(alpha: 0.3) : null,
-              colorBlendMode: _isPressed ? BlendMode.darken : null,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

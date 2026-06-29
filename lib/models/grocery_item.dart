@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class GroceryItem {
   final String id;
   final String name;
@@ -5,6 +7,7 @@ class GroceryItem {
   final String unit;
   final String category;
   final String? notes;
+  final String? ingredientKey;
   final bool isChecked;
   final DateTime addedAt;
   final String source; // "ai" | "manual" | "recipe"
@@ -16,6 +19,7 @@ class GroceryItem {
     required this.unit,
     required this.category,
     this.notes,
+    this.ingredientKey,
     this.isChecked = false,
     required this.addedAt,
     required this.source,
@@ -28,6 +32,7 @@ class GroceryItem {
     String? unit,
     String? category,
     String? notes,
+    String? ingredientKey,
     bool? isChecked,
     DateTime? addedAt,
     String? source,
@@ -39,6 +44,7 @@ class GroceryItem {
       unit: unit ?? this.unit,
       category: category ?? this.category,
       notes: notes ?? this.notes,
+      ingredientKey: ingredientKey ?? this.ingredientKey,
       isChecked: isChecked ?? this.isChecked,
       addedAt: addedAt ?? this.addedAt,
       source: source ?? this.source,
@@ -46,13 +52,16 @@ class GroceryItem {
   }
 
   factory GroceryItem.fromJson(Map<String, dynamic> json) {
+    final random = Random();
+    final ingredientKey = json['ingredientKey'] as String?;
     return GroceryItem(
-      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ?? '${DateTime.now().millisecondsSinceEpoch}_${random.nextInt(999999)}',
       name: json['name'] as String? ?? 'Unknown',
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
       unit: json['unit'] as String? ?? '',
       category: json['category'] as String? ?? 'Uncategorized',
       notes: json['notes'] as String?,
+      ingredientKey: (ingredientKey != null && ingredientKey.isNotEmpty) ? ingredientKey : null,
       isChecked: json['isChecked'] as bool? ?? false,
       addedAt: json['addedAt'] != null ? DateTime.parse(json['addedAt']) : DateTime.now(),
       source: json['source'] as String? ?? 'ai',
