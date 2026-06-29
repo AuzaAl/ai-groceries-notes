@@ -106,7 +106,10 @@ class _GroceryBottomAppBarState extends State<GroceryBottomAppBar> {
                   icon: 'assets/icons/home.svg',
                   label: 'Home',
                   isSelected: _selectedIndex == 0,
-                  onTap: () => _onTabTapped(0),
+                  onTap: () {
+                    _onTabTapped(0);
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
                 ),
                 _NavBarItem(
                   icon: 'assets/icons/paper.svg',
